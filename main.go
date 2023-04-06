@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"log"
-	"math"
 	"math/rand"
-	"time"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
@@ -20,6 +18,9 @@ const (
 var (
 	playerSp = 4.0
 
+	camX = 0.0
+	camY = 0.0
+
 	player = &Player{
 		x:     0,
 		y:     0,
@@ -28,42 +29,39 @@ var (
 		angle: 0.0,
 	}
 
-	dotSize  = 4
-	dots     = []DrawRectParams{}
+	dotSize      = 4
+	dots         = []DrawRectParams{}
 	dotSpawnRate = 120
 
-	laserSpeed = 8
-	lasers     = []DrawLineParams{}
-
-	mouseX = 0
-	mouseY = 0
+	// laserSpeed = 8
 
 	frameCount = 1
 )
 
-type Laser struct {
-	x     float64
-	y     float64
-	angle float64
-}
-
 type DrawRectParams struct {
-	X float64
-	Y float64
-	W float64
-	H float64
+	X     float64
+	Y     float64
+	W     float64
+	H     float64
 	Color color.RGBA
 }
+
 // DrawLineParams{X0: laserX - float64(camX), Y0: laserY - float64(camY), X1: laserEndX - float64(camX), Y1: laserEndY - float64(camY), Color: color.RGBA{255, 0, 0, 255}})
 type DrawLineParams struct {
-	X0 float64
-	X1 float64
-	Y0 float64
-	Y1 float64
+	X0    float64
+	X1    float64
+	Y0    float64
+	Y1    float64
 	Color color.RGBA
 }
 
-func update(screen *ebiten.Image) error {
+// Game implements ebiten.Game interface.
+type Game struct{}
+
+// Update proceeds the game state.
+// Update is called every tick (1/60 [s] by default).
+func (g *Game) Update(screen *ebiten.Image) error {
+	// Write your game's logical update.
 	frameCount += 1
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
 		player.y -= playerSp
@@ -79,12 +77,11 @@ func update(screen *ebiten.Image) error {
 	}
 
 	// Calculate the position of the screen center based on the player's position
-	camX := player.x + player.w/2 - screenWidth/2
-	camY := player.y + player.h/2 - screenHeight/2
+	camX = player.x + player.w/2 - screenWidth/2
+	camY = player.y + player.h/2 - screenHeight/2
 
 	// Generate a set of random dots if the dots slice is empty
-	if frameCount % dotSpawnRate == 0 {
-		rand.Seed(time.Now().UnixNano())
+	if frameCount%dotSpawnRate == 0 {
 		for i := 0; i < 10; i++ {
 			x := camX + float64(rand.Intn(screenWidth))
 			y := camY + float64(rand.Intn(screenHeight))
@@ -96,21 +93,25 @@ func update(screen *ebiten.Image) error {
 	// Update the player rotation based on the mouse position
 	player.update(float64(player.x-camX), float64(player.y-camY))
 
+	if len(player.lasers) > 0 {
+		player.updateLasers()
+	}
+
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-		laserX := float64(player.x) + float64(player.w)/2
-		laserY := float64(player.y) + float64(player.h)/2
-		laserLen := 50.0
-		laserEndX := laserX + laserLen*math.Cos(player.angle)
-		laserEndY := laserY + laserLen*math.Sin(player.angle)
-		lasers = append(lasers, DrawLineParams{X0: laserX - float64(camX), Y0: laserY - float64(camY), X1: laserEndX - float64(camX), Y1: laserEndY - float64(camY), Color: color.RGBA{255, 0, 0, 255}})
+		player.lasers = append(player.lasers, &Laser{
+			x:     player.x,
+			y:     player.y,
+			angle: player.angle,
+			speed: 1,
+		})
 	}
+	return nil
+}
 
-	if ebiten.IsDrawingSkipped() {
-		return nil
-	}
-
-
-	// Clear the screen to white
+// Draw draws the game screen.
+// Draw is called every frame (typically 1/60[s] for 60Hz display).
+func (g *Game) Draw(screen *ebiten.Image) {
+	// Write your game's rendering.
 	screen.Fill(color.Black)
 
 	// Translate the screen to center it on the player
@@ -122,28 +123,36 @@ func update(screen *ebiten.Image) error {
 		ebitenutil.DrawRect(screen, dot.X-float64(camX), dot.Y-float64(camY), dot.W, dot.H, dot.Color)
 	}
 
-	// Move the lasers
-	for i := 0; i < len(lasers); i++ {
-		ebitenutil.DrawLine(screen, lasers[i].X0, lasers[i].Y0, lasers[i].X1, lasers[i].Y1, lasers[i].Color)
-	}
+	// Draw the lasers
+	player.drawLasers(screen, camX, camY)
 
+	// Draw the player
 	player.draw(screen, float64(player.x-camX), float64(player.y-camY))
 
-    // Move the player based on the mouse position
-    mx, my := ebiten.CursorPosition()
-    angle := angleBetweenPoints(player.x, player.y, float64(mx), float64(my))
+	// Move the player based on the mouse position
+	mx, my := ebiten.CursorPosition()
+	angle := angleBetweenPoints(player.x, player.y, float64(mx), float64(my))
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("angle: %f", angle))
+}
 
-	return nil
+// Layout takes the outside size (e.g., the window size) and returns the (logical) screen size.
+// If you don't have to adjust the screen size with the outside size, just return a fixed size.
+func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
+	return screenWidth, screenHeight
 }
 
 func main() {
-	// Set up the game window
+	game := &Game{}
+	// Sepcify the window size as you like. Here, a doulbed size is specified.
 	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("My Game")
+	ebiten.SetWindowTitle("Your game's title")
+	img, _, _ := ebitenutil.NewImageFromFile("./spaceship.gif", ebiten.FilterDefault)
 
-	// Start the game loop
-	if err := ebiten.Run(update, screenWidth, screenHeight, 1, "My Game"); err != nil {
+	player.img = img
+	player.w = float64(img.Bounds().Dx())
+	player.h = float64(img.Bounds().Dy())
+	// Call ebiten.RunGame to start your game loop.
+	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
 	}
 }
