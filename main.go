@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 	"log"
 	"math/rand"
@@ -11,12 +10,12 @@ import (
 )
 
 const (
-	screenWidth  = 640
-	screenHeight = 480
+	screenWidth  = 1280
+	screenHeight = 860
 )
 
 var (
-	playerSp = 4.0
+	maxSpeed = 5.0
 
 	camX = 0.0
 	camY = 0.0
@@ -32,10 +31,16 @@ var (
 	dotSize      = 4
 	dots         = []DrawRectParams{}
 	dotSpawnRate = 120
+	dotSpawnCount = 30
 
-	// laserSpeed = 8
+	laserSpeed = 8.0
 
-	frameCount = 1
+	frameCount = 0
+	mouseButtonClicked = false
+
+	recticle = Recticle{
+		size: 5,
+	}
 )
 
 type DrawRectParams struct {
@@ -64,16 +69,14 @@ func (g *Game) Update(screen *ebiten.Image) error {
 	// Write your game's logical update.
 	frameCount += 1
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
-		player.y -= playerSp
+		if player.speed < maxSpeed {
+			player.speed += 0.1
+		}
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyDown) {
-		player.y += playerSp
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-		player.x -= playerSp
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyRight) {
-		player.x += playerSp
+		if player.speed > -maxSpeed {
+			player.speed -= 0.1
+		}
 	}
 
 	// Calculate the position of the screen center based on the player's position
@@ -82,7 +85,7 @@ func (g *Game) Update(screen *ebiten.Image) error {
 
 	// Generate a set of random dots if the dots slice is empty
 	if frameCount%dotSpawnRate == 0 {
-		for i := 0; i < 10; i++ {
+		for i := 0; i < dotSpawnCount; i++ {
 			x := camX + float64(rand.Intn(screenWidth))
 			y := camY + float64(rand.Intn(screenHeight))
 			dots = append(dots, DrawRectParams{X: float64(x), Y: float64(y), W: float64(dotSize), H: float64(dotSize), Color: color.RGBA{0, 255, 0, 255}})
@@ -97,13 +100,18 @@ func (g *Game) Update(screen *ebiten.Image) error {
 		player.updateLasers()
 	}
 
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+	if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		mouseButtonClicked = false
+	}
+
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) && !mouseButtonClicked {
 		player.lasers = append(player.lasers, &Laser{
 			x:     player.x,
 			y:     player.y,
 			angle: player.angle,
-			speed: 1,
+			speed: laserSpeed,
 		})
+		mouseButtonClicked = true
 	}
 	return nil
 }
@@ -129,10 +137,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Draw the player
 	player.draw(screen, float64(player.x-camX), float64(player.y-camY))
 
-	// Move the player based on the mouse position
-	mx, my := ebiten.CursorPosition()
-	angle := angleBetweenPoints(player.x, player.y, float64(mx), float64(my))
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("angle: %f", angle))
+	// Draw recticle
+	recticle.draw(screen)
 }
 
 // Layout takes the outside size (e.g., the window size) and returns the (logical) screen size.
@@ -146,11 +152,24 @@ func main() {
 	// Sepcify the window size as you like. Here, a doulbed size is specified.
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Your game's title")
+	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	img, _, _ := ebitenutil.NewImageFromFile("./spaceship.gif", ebiten.FilterDefault)
 
 	player.img = img
 	player.w = float64(img.Bounds().Dx())
 	player.h = float64(img.Bounds().Dy())
+
+	// Calculate the position of the screen center based on the player's position
+	camX = player.x + player.w/2 - screenWidth/2
+	camY = player.y + player.h/2 - screenHeight/2
+
+	// Generate a set of random dots if the dots slice is empty
+	for i := 0; i < dotSpawnCount; i++ {
+		x := camX + float64(rand.Intn(screenWidth))
+		y := camY + float64(rand.Intn(screenHeight))
+		dots = append(dots, DrawRectParams{X: float64(x), Y: float64(y), W: float64(dotSize), H: float64(dotSize), Color: color.RGBA{0, 255, 0, 255}})
+	}
+
 	// Call ebiten.RunGame to start your game loop.
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
