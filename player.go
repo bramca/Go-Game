@@ -12,14 +12,15 @@ type Player struct {
 	angle  float64
 	lasers []*Laser
 	img    *ebiten.Image
-	speed  float64
+	ySpeed float64
+	xSpeed float64
 }
 
 func (p *Player) update(x, y float64) {
 	// Move the player based on the mouse position
 	mx, my := ebiten.CursorPosition()
-	p.x += p.speed * math.Cos(p.angle)
-	p.y += p.speed * math.Sin(p.angle)
+	p.y += p.ySpeed
+	p.x += p.xSpeed
 	p.angle = angleBetweenPoints(x, y, float64(mx), float64(my))
 }
 
@@ -27,7 +28,7 @@ func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {
 	// Draw the player
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(-float64(p.w/2), -float64(p.h/2))
-	op.GeoM.Rotate(p.angle + math.Pi/2)
+	op.GeoM.Rotate(p.angle)
 	op.GeoM.Translate(x, y)
 	screen.DrawImage(p.img, op)
 }

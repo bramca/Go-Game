@@ -1,12 +1,16 @@
 package main
 
 import (
+	"encoding/hex"
 	"image/color"
 	"log"
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
+	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/opentype"
 )
 
 const (
@@ -15,7 +19,8 @@ const (
 )
 
 var (
-	maxSpeed = 5.0
+	maxSpeed    = 5.0
+	speedUpdate = 0.2
 
 	camX = 0.0
 	camY = 0.0
@@ -28,14 +33,17 @@ var (
 		angle: 0.0,
 	}
 
-	dotSize      = 4
-	dots         = []DrawRectParams{}
-	dotSpawnRate = 120
-	dotSpawnCount = 30
+	dotSize       = 10
+	dots          = []Dot{}
+	dotSpawnRate  = 180
+	dotSpawnCount = 20
+	dotHexSize    = 3
+
+	textFont font.Face
 
 	laserSpeed = 8.0
 
-	frameCount = 0
+	frameCount         = 0
 	mouseButtonClicked = false
 
 	recticle = Recticle{
@@ -51,7 +59,6 @@ type DrawRectParams struct {
 	Color color.RGBA
 }
 
-// DrawLineParams{X0: laserX - float64(camX), Y0: laserY - float64(camY), X1: laserEndX - float64(camX), Y1: laserEndY - float64(camY), Color: color.RGBA{255, 0, 0, 255}})
 type DrawLineParams struct {
 	X0    float64
 	X1    float64
@@ -68,14 +75,25 @@ type Game struct{}
 func (g *Game) Update(screen *ebiten.Image) error {
 	// Write your game's logical update.
 	frameCount += 1
-	if ebiten.IsKeyPressed(ebiten.KeyUp) {
-		if player.speed < maxSpeed {
-			player.speed += 0.1
+	if ebiten.IsKeyPressed(ebiten.KeyDown) {
+		if player.ySpeed < maxSpeed {
+			player.ySpeed += speedUpdate
 		}
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyDown) {
-		if player.speed > -maxSpeed {
-			player.speed -= 0.1
+	if ebiten.IsKeyPressed(ebiten.KeyUp) {
+		if player.ySpeed > -maxSpeed {
+			player.ySpeed -= speedUpdate
+		}
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyRight) {
+		if player.xSpeed < maxSpeed {
+			player.xSpeed += speedUpdate
+		}
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
+		if player.xSpeed > -maxSpeed {
+			player.xSpeed -= speedUpdate
 		}
 	}
 
@@ -85,11 +103,7 @@ func (g *Game) Update(screen *ebiten.Image) error {
 
 	// Generate a set of random dots if the dots slice is empty
 	if frameCount%dotSpawnRate == 0 {
-		for i := 0; i < dotSpawnCount; i++ {
-			x := camX + float64(rand.Intn(screenWidth))
-			y := camY + float64(rand.Intn(screenHeight))
-			dots = append(dots, DrawRectParams{X: float64(x), Y: float64(y), W: float64(dotSize), H: float64(dotSize), Color: color.RGBA{0, 255, 0, 255}})
-		}
+		spawnDots()
 		frameCount = 1
 	}
 
@@ -128,7 +142,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	// Draw the dots at their current position relative to the camera
 	for _, dot := range dots {
-		ebitenutil.DrawRect(screen, dot.X-float64(camX), dot.Y-float64(camY), dot.W, dot.H, dot.Color)
+		dot.draw(screen, camX, camY)
 	}
 
 	// Draw the lasers
@@ -153,7 +167,7 @@ func main() {
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Your game's title")
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
-	img, _, _ := ebitenutil.NewImageFromFile("./spaceship.gif", ebiten.FilterDefault)
+	img, _, _ := ebitenutil.NewImageFromFile("./gopher.png", ebiten.FilterDefault)
 
 	player.img = img
 	player.w = float64(img.Bounds().Dx())
@@ -164,14 +178,45 @@ func main() {
 	camY = player.y + player.h/2 - screenHeight/2
 
 	// Generate a set of random dots if the dots slice is empty
-	for i := 0; i < dotSpawnCount; i++ {
-		x := camX + float64(rand.Intn(screenWidth))
-		y := camY + float64(rand.Intn(screenHeight))
-		dots = append(dots, DrawRectParams{X: float64(x), Y: float64(y), W: float64(dotSize), H: float64(dotSize), Color: color.RGBA{0, 255, 0, 255}})
-	}
+	dpi := 72.0
+	tt, _ := opentype.Parse(fonts.MPlus1pRegular_ttf)
+	textFont, _ = opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    float64(dotSize),
+		DPI:     dpi,
+		Hinting: font.HintingVertical,
+	})
+	spawnDots()
 
 	// Call ebiten.RunGame to start your game loop.
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
+	}
+}
+
+func randomHex(n int) (string, error) {
+	bytes := make([]byte, n)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
+func spawnDots() {
+	for i := 0; i < dotSpawnCount; i++ {
+		x := int(camX + float64(rand.Intn(screenWidth*2)))
+		y := int(camY + float64(rand.Intn(screenHeight*2)))
+		msg, _ := randomHex(4)
+		dots = append(dots, Dot{
+			x: x,
+			y: y,
+			color: color.RGBA{
+				R: 0x80 + uint8(rand.Intn(0x7f)),
+				G: 0x80 + uint8(rand.Intn(0x7f)),
+				B: 0x80 + uint8(rand.Intn(0x7f)),
+				A: 0xf0,
+			},
+			msg:      msg,
+			textFont: textFont,
+		})
 	}
 }
