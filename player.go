@@ -1,6 +1,7 @@
 package main
 
 import (
+	"image/color"
 	"math"
 
 	"github.com/hajimehoshi/ebiten"
@@ -41,6 +42,21 @@ func (p *Player) updateLasers() {
 			if math.Abs(float64(laser.y+laser.speed*math.Sin(laser.angle))-float64(enemy.y)) < enemy.h/2 && math.Abs(float64(laser.x+laser.speed*math.Cos(laser.angle))-float64(enemy.x)) < enemy.w/2 {
 				enemy.points -= 1
 				hit = true
+				enemy.hits = append(enemy.hits, Hit{
+					Dot: Dot{
+						x: int(enemy.x),
+						y: int(enemy.y - enemy.h/2),
+						color: color.RGBA{
+							R: 0xff,
+							G: 0xff,
+							B: 0xff,
+							A: 0xf0,
+						},
+						msg:      "-1",
+						textFont: textFont,
+					},
+					duration: 40,
+				})
 			}
 		}
 		if hit {

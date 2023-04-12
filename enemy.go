@@ -13,6 +13,7 @@ type Enemy struct {
 	Player
 	visibleRange   float64
 	dotTargetIndex int
+	hits           []Hit
 }
 
 func (p *Enemy) searchDots(screen *ebiten.Image, dots []*Dot) {
@@ -50,6 +51,15 @@ func (p *Enemy) draw(screen *ebiten.Image, x float64, y float64, dots []*Dot) {
 	op.GeoM.Rotate(p.angle)
 	op.GeoM.Translate(x, y)
 	screen.DrawImage(p.img, op)
+	for i := len(p.hits) - 1; i >= 0; i-- {
+		if p.hits[i].duration > 0 {
+			p.hits[i].update()
+			p.hits[i].draw(screen, camX, camY)
+		} else {
+			p.hits[i] = p.hits[len(p.hits)-1]
+			p.hits = p.hits[:len(p.hits)-1]
+		}
+	}
 	if p.dotTargetIndex >= 0 && p.dotTargetIndex < len(dots) && dots[p.dotTargetIndex] != nil {
 		ebitenutil.DebugPrint(screen, fmt.Sprintf("\n\ndot.x, dot.y: %d, %d\nangleBetween: %02f", dots[p.dotTargetIndex].x, dots[p.dotTargetIndex].y, p.angle))
 		ebitenutil.DebugPrint(screen, fmt.Sprintf("\n\n\n\nenemy.xSpeed, enemy.ySpeed, enemy.points: %02f, %02f, %d", p.xSpeed, p.ySpeed, p.points))
