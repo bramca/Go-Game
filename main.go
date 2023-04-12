@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"image/color"
 	"log"
 	"math/rand"
@@ -26,15 +25,19 @@ var (
 	camY = 0.0
 
 	player = &Player{
-		x:     0,
-		y:     0,
-		w:     20,
-		h:     30,
-		angle: 0.0,
+		x:      0,
+		y:      0,
+		w:      20,
+		h:      30,
+		angle:  0.0,
+		points: 10,
 	}
 
+	enemies          = []*Enemy{}
+	enemyStartPoints = 10
+
 	dotSize       = 10
-	dots          = []Dot{}
+	dots          = []*Dot{}
 	dotSpawnRate  = 180
 	dotSpawnCount = 20
 	dotHexSize    = 3
@@ -42,6 +45,7 @@ var (
 	textFont font.Face
 
 	laserSpeed = 8.0
+	maxLasers  = 10
 
 	frameCount         = 0
 	mouseButtonClicked = false
@@ -50,22 +54,6 @@ var (
 		size: 5,
 	}
 )
-
-type DrawRectParams struct {
-	X     float64
-	Y     float64
-	W     float64
-	H     float64
-	Color color.RGBA
-}
-
-type DrawLineParams struct {
-	X0    float64
-	X1    float64
-	Y0    float64
-	Y1    float64
-	Color color.RGBA
-}
 
 // Game implements ebiten.Game interface.
 type Game struct{}
@@ -103,8 +91,13 @@ func (g *Game) Update(screen *ebiten.Image) error {
 
 	// Generate a set of random dots if the dots slice is empty
 	if frameCount%dotSpawnRate == 0 {
-		spawnDots()
+		// spawnDots()
 		frameCount = 1
+	}
+
+	// Update enemies
+	for _, enemy := range enemies {
+		enemy.update(dots)
 	}
 
 	// Update the player rotation based on the mouse position
@@ -125,6 +118,10 @@ func (g *Game) Update(screen *ebiten.Image) error {
 			angle: player.angle,
 			speed: laserSpeed,
 		})
+		if len(player.lasers) > maxLasers {
+			player.lasers[0] = player.lasers[len(player.lasers)-1]
+			player.lasers = player.lasers[1:]
+		}
 		mouseButtonClicked = true
 	}
 	return nil
@@ -141,8 +138,22 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	op.GeoM.Translate(-float64(camX), -float64(camY))
 
 	// Draw the dots at their current position relative to the camera
-	for _, dot := range dots {
-		dot.draw(screen, camX, camY)
+	for index, dot := range dots {
+		if dot != nil {
+			dot.draw(screen, camX, camY)
+		} else {
+			dots[index] = dots[len(dots)-1]
+			dots = dots[:len(dots)-1]
+		}
+	}
+
+	// Draw the enemies
+	for _, enemy := range enemies {
+		enemy.draw(screen, float64(enemy.x-camX), float64(enemy.y-camY), dots)
+		enemy.detectPlayer(screen, player)
+		if enemy.dotTargetIndex < 0 || enemy.dotTargetIndex > len(dots)-1 {
+			enemy.searchDots(screen, dots)
+		}
 	}
 
 	// Draw the lasers
@@ -187,36 +198,25 @@ func main() {
 	})
 	spawnDots()
 
+	enemyImg, _, _ := ebitenutil.NewImageFromFile("./rust.png", ebiten.FilterDefault)
+	enemies = append(enemies, &Enemy{
+		Player: Player{
+			x:      camX + float64(rand.Intn(screenWidth*2)),
+			y:      camY + float64(rand.Intn(screenHeight*2)),
+			w:      float64(enemyImg.Bounds().Dx()),
+			h:      float64(enemyImg.Bounds().Dy()),
+			angle:  0,
+			lasers: []*Laser{},
+			img:    enemyImg,
+			ySpeed: 0,
+			xSpeed: 0,
+			points: enemyStartPoints,
+		},
+		dotTargetIndex: -1,
+	})
+
 	// Call ebiten.RunGame to start your game loop.
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
-	}
-}
-
-func randomHex(n int) (string, error) {
-	bytes := make([]byte, n)
-	if _, err := rand.Read(bytes); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(bytes), nil
-}
-
-func spawnDots() {
-	for i := 0; i < dotSpawnCount; i++ {
-		x := int(camX + float64(rand.Intn(screenWidth*2)))
-		y := int(camY + float64(rand.Intn(screenHeight*2)))
-		msg, _ := randomHex(4)
-		dots = append(dots, Dot{
-			x: x,
-			y: y,
-			color: color.RGBA{
-				R: 0x80 + uint8(rand.Intn(0x7f)),
-				G: 0x80 + uint8(rand.Intn(0x7f)),
-				B: 0x80 + uint8(rand.Intn(0x7f)),
-				A: 0xf0,
-			},
-			msg:      msg,
-			textFont: textFont,
-		})
 	}
 }

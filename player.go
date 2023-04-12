@@ -14,6 +14,7 @@ type Player struct {
 	img    *ebiten.Image
 	ySpeed float64
 	xSpeed float64
+	points int
 }
 
 func (p *Player) update(x, y float64) {
@@ -34,7 +35,19 @@ func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {
 }
 
 func (p *Player) updateLasers() {
-	for _, laser := range p.lasers {
+	for index, laser := range p.lasers {
+		hit := false
+		for _, enemy := range enemies {
+			if math.Abs(float64(laser.y+laser.speed*math.Sin(laser.angle))-float64(enemy.y)) < enemy.h/2 && math.Abs(float64(laser.x+laser.speed*math.Cos(laser.angle))-float64(enemy.x)) < enemy.w/2 {
+				enemy.points -= 1
+				hit = true
+			}
+		}
+		if hit {
+			p.lasers[index] = p.lasers[len(p.lasers)-1]
+			p.lasers = p.lasers[:len(p.lasers)-1]
+			continue
+		}
 		laser.update()
 	}
 }
@@ -43,8 +56,4 @@ func (p *Player) drawLasers(screen *ebiten.Image, camX float64, camY float64) {
 	for _, laser := range p.lasers {
 		laser.draw(screen, camX, camY)
 	}
-}
-
-func angleBetweenPoints(x1, y1, x2, y2 float64) float64 {
-	return math.Atan2(y2-y1, x2-x1)
 }

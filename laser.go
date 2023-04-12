@@ -19,10 +19,10 @@ func (l *Laser) update() {
 	l.y += l.speed * math.Sin(l.angle)
 }
 
-func (l *Laser) draw(screen *ebiten.Image, camX float64, camY float64) {
+func (l *Laser) draw(screen *ebiten.Image, x float64, y float64) {
 	// Draw the laser line
-	laserX := l.x - camX
-	laserY := l.y - camY
+	laserX := l.x - x
+	laserY := l.y - y
 	x1, y1 := laserX, laserY
 	x2, y2 := laserX+10*math.Cos(l.angle), laserY+10*math.Sin(l.angle)
 	ebitenutil.DrawLine(screen, x1, y1, x2, y2, color.RGBA{R: 255, G: 0, B: 0, A: 255})
