@@ -19,7 +19,6 @@ type Enemy struct {
 func (p *Enemy) searchDots(screen *ebiten.Image, dots []*Dot) {
 	if len(dots) > 0 {
 		p.dotTargetIndex = rand.Intn(len(dots))
-		dots[p.dotTargetIndex].msg = "target"
 	}
 }
 
@@ -30,18 +29,22 @@ func (p *Enemy) update(dots []*Dot) {
 		p.xSpeed = math.Cos(p.angle) * 2
 		for dotIndex := range dots {
 			if dots[dotIndex] != nil && math.Abs(float64(p.y+p.ySpeed)-float64(dots[dotIndex].y)) < p.h/2 && math.Abs(float64(p.x+p.xSpeed)-float64(dots[dotIndex].x)) < p.w/2 {
-				p.points += 1
+				p.points += pointsPerDot
 				dots[dotIndex] = nil
 				if dotIndex == p.dotTargetIndex {
 					p.dotTargetIndex = -1
 					p.ySpeed = 0
 					p.xSpeed = 0
 				}
+				if p.points > p.maxPoints {
+					p.maxPoints = p.points
+				}
 			}
 		}
 	}
 	p.y += p.ySpeed
 	p.x += p.xSpeed
+	p.healthBar.update(p.x-camX-p.w/2, p.y-(p.h-p.h/3)-camY, p.points, p.maxPoints)
 }
 
 func (p *Enemy) draw(screen *ebiten.Image, x float64, y float64, dots []*Dot) {
@@ -51,6 +54,7 @@ func (p *Enemy) draw(screen *ebiten.Image, x float64, y float64, dots []*Dot) {
 	op.GeoM.Rotate(p.angle)
 	op.GeoM.Translate(x, y)
 	screen.DrawImage(p.img, op)
+	p.healthBar.draw(screen)
 	for i := len(p.hits) - 1; i >= 0; i-- {
 		if p.hits[i].duration > 0 {
 			p.hits[i].update()

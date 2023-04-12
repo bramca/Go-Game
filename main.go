@@ -24,28 +24,34 @@ var (
 	camX = 0.0
 	camY = 0.0
 
-	player = &Player{
-		x:      0,
-		y:      0,
-		w:      20,
-		h:      30,
-		angle:  0.0,
-		points: 10,
+	healthBarSize = 5.0
+
+	playerStartPoints = 15
+	player            = &Player{
+		x:         0,
+		y:         0,
+		w:         20,
+		h:         30,
+		angle:     0.0,
+		points:    playerStartPoints,
+		maxPoints: playerStartPoints,
 	}
 
 	enemies          = []*Enemy{}
-	enemyStartPoints = 10
+	enemyStartPoints = 20
 
 	dotSize       = 10
 	dots          = []*Dot{}
 	dotSpawnRate  = 180
 	dotSpawnCount = 20
 	dotHexSize    = 3
+	pointsPerDot  = 2
 
 	textFont font.Face
 
-	laserSpeed = 8.0
-	maxLasers  = 10
+	laserSpeed   = 8.0
+	maxLasers    = 10
+	pointsPerHit = 1
 
 	frameCount         = 0
 	mouseButtonClicked = false
@@ -148,11 +154,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	// Draw the enemies
-	for _, enemy := range enemies {
-		enemy.draw(screen, float64(enemy.x-camX), float64(enemy.y-camY), dots)
-		enemy.detectPlayer(screen, player)
-		if enemy.dotTargetIndex < 0 || enemy.dotTargetIndex > len(dots)-1 {
-			enemy.searchDots(screen, dots)
+	for index, enemy := range enemies {
+		if enemy.points > 0 {
+			enemy.draw(screen, float64(enemy.x-camX), float64(enemy.y-camY), dots)
+			enemy.detectPlayer(screen, player)
+			if enemy.dotTargetIndex < 0 || enemy.dotTargetIndex > len(dots)-1 {
+				enemy.searchDots(screen, dots)
+			}
+		} else {
+			enemies[index] = enemies[len(enemies)-1]
+			enemies = enemies[:len(enemies)-1]
 		}
 	}
 
@@ -176,13 +187,21 @@ func main() {
 	game := &Game{}
 	// Sepcify the window size as you like. Here, a doulbed size is specified.
 	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("Your game's title")
+	ebiten.SetWindowTitle("Go Forever")
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	img, _, _ := ebitenutil.NewImageFromFile("./gopher.png", ebiten.FilterDefault)
 
 	player.img = img
 	player.w = float64(img.Bounds().Dx())
 	player.h = float64(img.Bounds().Dy())
+	player.healthBar = HealthBar{
+		x:         player.x,
+		y:         player.y - player.h,
+		w:         player.w,
+		h:         healthBarSize,
+		points:    player.points,
+		maxPoints: player.maxPoints,
+	}
 
 	// Calculate the position of the screen center based on the player's position
 	camX = player.x + player.w/2 - screenWidth/2
@@ -201,19 +220,28 @@ func main() {
 	enemyImg, _, _ := ebitenutil.NewImageFromFile("./rust.png", ebiten.FilterDefault)
 	enemies = append(enemies, &Enemy{
 		Player: Player{
-			x:      camX + float64(rand.Intn(screenWidth*2)),
-			y:      camY + float64(rand.Intn(screenHeight*2)),
-			w:      float64(enemyImg.Bounds().Dx()),
-			h:      float64(enemyImg.Bounds().Dy()),
-			angle:  0,
-			lasers: []*Laser{},
-			img:    enemyImg,
-			ySpeed: 0,
-			xSpeed: 0,
-			points: enemyStartPoints,
+			x:         camX + float64(rand.Intn(screenWidth*2)),
+			y:         camY + float64(rand.Intn(screenHeight*2)),
+			w:         float64(enemyImg.Bounds().Dx()),
+			h:         float64(enemyImg.Bounds().Dy()),
+			angle:     0,
+			lasers:    []*Laser{},
+			img:       enemyImg,
+			ySpeed:    0,
+			xSpeed:    0,
+			points:    enemyStartPoints,
+			maxPoints: enemyStartPoints,
 		},
 		dotTargetIndex: -1,
 	})
+	enemies[0].healthBar = HealthBar{
+		x:         enemies[0].x,
+		y:         enemies[0].y - enemies[0].h,
+		w:         enemies[0].w,
+		h:         healthBarSize,
+		points:    enemies[0].points,
+		maxPoints: enemies[0].maxPoints,
+	}
 
 	// Call ebiten.RunGame to start your game loop.
 	if err := ebiten.RunGame(game); err != nil {
