@@ -40,10 +40,15 @@ var (
 
 	enemies          = []*Enemy{}
 	enemyStartPoints = 20
+	maxEnemies       = 5
+
+	framesPerSecond = 60
+	frameCount      = 1
+	maxFrameCount   = 1200
 
 	dotSize       = 10
 	dots          = []*Dot{}
-	dotSpawnRate  = 180
+	dotSpawnRate  = 3 * framesPerSecond
 	dotSpawnCount = 20
 	dotHexSize    = 3
 	pointsPerDot  = 2
@@ -54,7 +59,6 @@ var (
 	maxLasers    = 10
 	pointsPerHit = 1
 
-	frameCount         = 0
 	mouseButtonClicked = false
 
 	recticle = Recticle{
@@ -96,15 +100,22 @@ func (g *Game) Update(screen *ebiten.Image) error {
 	camX = player.x + player.w/2 - screenWidth/2
 	camY = player.y + player.h/2 - screenHeight/2
 
+	if frameCount%maxFrameCount == 0 {
+		frameCount = 1
+	}
+
 	// Generate a set of random dots if the dots slice is empty
 	if frameCount%dotSpawnRate == 0 {
-		// spawnDots()
-		frameCount = 1
+		spawnDots()
 	}
 
 	// Update enemies
 	for _, enemy := range enemies {
-		enemy.update(dots)
+		enemy.brain(dots, player)
+		enemy.update()
+		if len(enemy.lasers) > 0 {
+			enemy.updateLasers()
+		}
 	}
 
 	// Update the player rotation based on the mouse position
@@ -158,10 +169,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for index, enemy := range enemies {
 		if enemy.points > 0 {
 			enemy.draw(screen, float64(enemy.x-camX), float64(enemy.y-camY), dots)
-			enemy.detectPlayer(screen, player)
-			if enemy.dotTargetIndex < 0 || enemy.dotTargetIndex > len(dots)-1 {
-				enemy.searchDots(screen, dots)
-			}
+			enemy.drawLasers(screen, enemy.x-camX, enemy.y-camY)
 		} else {
 			enemies[index] = enemies[len(enemies)-1]
 			enemies = enemies[:len(enemies)-1]
@@ -219,30 +227,42 @@ func main() {
 	spawnDots()
 
 	enemyImg, _, _ := ebitenutil.NewImageFromFile("./rust.png", ebiten.FilterDefault)
-	enemies = append(enemies, &Enemy{
-		Player: Player{
-			x:         camX + float64(rand.Intn(screenWidth*2)),
-			y:         camY + float64(rand.Intn(screenHeight*2)),
-			w:         float64(enemyImg.Bounds().Dx()),
-			h:         float64(enemyImg.Bounds().Dy()),
-			angle:     0,
-			lasers:    []*Laser{},
-			img:       enemyImg,
-			ySpeed:    0,
-			xSpeed:    0,
-			points:    enemyStartPoints,
-			maxPoints: enemyStartPoints,
-		},
-		dotTargetIndex: -1,
-		visibleRange:   math.Min(screenWidth, screenHeight) / 2,
-	})
-	enemies[0].healthBar = HealthBar{
-		x:         enemies[0].x,
-		y:         enemies[0].y - enemies[0].h,
-		w:         enemies[0].w,
-		h:         healthBarSize,
-		points:    enemies[0].points,
-		maxPoints: enemies[0].maxPoints,
+	for i := 0; i < maxEnemies; i++ {
+		x := camX + float64(rand.Intn(screenWidth*2))
+		y := camY + float64(rand.Intn(screenHeight*2))
+		w := float64(enemyImg.Bounds().Dx())
+		h := float64(enemyImg.Bounds().Dy())
+		points := enemyStartPoints
+		maxPoints := enemyStartPoints
+		enemies = append(enemies, &Enemy{
+			Player: Player{
+				x:         x,
+				y:         y,
+				w:         w,
+				h:         h,
+				angle:     0,
+				lasers:    []*Laser{},
+				img:       enemyImg,
+				ySpeed:    0,
+				xSpeed:    0,
+				points:    points,
+				maxPoints: maxPoints,
+				healthBar: HealthBar{
+					x:         x,
+					y:         y - h,
+					w:         w,
+					h:         healthBarSize,
+					points:    points,
+					maxPoints: maxPoints,
+				},
+			},
+			dotTargetIndex:  -1,
+			visibleRange:    float64(int(math.Min(screenWidth, screenHeight))+rand.Intn(int(math.Max(screenWidth, screenHeight))-int(math.Min(screenWidth, screenHeight)))) / 2,
+			greedy:          0.4,
+			aggressive:      0.6,
+			shootFreq:       (1 + rand.Intn(3)) * (framesPerSecond / 4),
+			speedMultiplyer: (2 + rand.Intn(4)),
+		})
 	}
 
 	// Call ebiten.RunGame to start your game loop.

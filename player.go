@@ -1,13 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 	"math"
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/ebitenutil"
 )
 
 type Player struct {
@@ -49,9 +47,6 @@ func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {
 	op.GeoM.Translate(x, y)
 	screen.DrawImage(p.img, op)
 	p.healthBar.draw(screen)
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("\n\nplayer.x, player.y: %02f, %02f", p.x, p.y))
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("\n\n\nplayer.xSpeed, player.ySpeed, player.points: %02f, %02f, %d", p.xSpeed, p.ySpeed, p.points))
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("\n\n\n\ndistance player - enemy: %02f", distanceBetweenPoints(p.x, p.y, enemies[0].x, enemies[0].y)))
 }
 
 func (p *Player) updateLasers() {
@@ -74,7 +69,7 @@ func (p *Player) updateLasers() {
 						msg:      strconv.Itoa(-pointsPerHit),
 						textFont: textFont,
 					},
-					duration: 40,
+					duration: 2 * framesPerSecond / 3,
 				})
 			}
 		}

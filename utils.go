@@ -25,10 +25,10 @@ func randomHex(n int) (string, error) {
 
 func spawnDots() {
 	for i := 0; i < dotSpawnCount; i++ {
-		// x := int(camX + float64(rand.Intn(screenWidth*2)))
-		// y := int(camY + float64(rand.Intn(screenHeight*2)))
-		x := int(camX + float64(rand.Intn(screenWidth)))
-		y := int(camY + float64(rand.Intn(screenHeight)))
+		x := int(camX + float64(rand.Intn(screenWidth*2)))
+		y := int(camY + float64(rand.Intn(screenHeight*2)))
+		// x := int(camX + float64(rand.Intn(screenWidth)))
+		// y := int(camY + float64(rand.Intn(screenHeight)))
 		msg, _ := randomHex(4)
 		dots = append(dots, &Dot{
 			x: x,
