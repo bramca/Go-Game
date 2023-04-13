@@ -1,12 +1,10 @@
 package main
 
 import (
-	"image/color"
 	"math"
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/ebitenutil"
 )
 
 type Enemy struct {
@@ -18,6 +16,7 @@ type Enemy struct {
 	aggressive      float64
 	shootFreq       int
 	speedMultiplyer int
+	movementPrediction float64
 }
 
 func (p *Enemy) brain(dots []*Dot, player *Player) {
@@ -72,7 +71,6 @@ func (p *Enemy) draw(screen *ebiten.Image, x float64, y float64, dots []*Dot) {
 			p.hits = p.hits[:len(p.hits)-1]
 		}
 	}
-	ebitenutil.DrawRect(screen, x-p.visibleRange, y-p.visibleRange, p.visibleRange*2, p.visibleRange*2, color.RGBA{R: 0xff, G: 0xff, B: 0xff, A: 0x0f})
 }
 
 func (p *Enemy) updateLasers() {
@@ -128,7 +126,7 @@ func (p *Enemy) eatDots(dots []*Dot) {
 }
 
 func (p *Enemy) shootLasers(player *Player) {
-	p.angle = angleBetweenPoints(p.x, p.y, player.x, player.y)
+	p.angle = angleBetweenPoints(p.x, p.y, player.x + player.xSpeed * p.movementPrediction, player.y + player.ySpeed * p.movementPrediction)
 	p.ySpeed = math.Sin(p.angle) * float64(p.speedMultiplyer)
 	p.xSpeed = math.Cos(p.angle) * float64(p.speedMultiplyer)
 

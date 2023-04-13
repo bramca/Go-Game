@@ -5,6 +5,9 @@ import (
 	"image/color"
 	"math"
 	"math/rand"
+
+	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/ebitenutil"
 )
 
 func angleBetweenPoints(x1, y1, x2, y2 float64) float64 {
@@ -40,7 +43,49 @@ func spawnDots() {
 				A: 0xf0,
 			},
 			msg:      msg,
-			textFont: textFont,
+			textFont: dotTextFont,
+		})
+	}
+}
+
+func spawnEnemies() {
+	for i := len(enemies); i < maxEnemies; i++ {
+		enemyImg, _, _ := ebitenutil.NewImageFromFile(enemyImages[rand.Intn(len(enemyImages))], ebiten.FilterDefault)
+		x := camX + float64(rand.Intn(screenWidth*2))
+		y := camY + float64(rand.Intn(screenHeight*2))
+		w := float64(enemyImg.Bounds().Dx())
+		h := float64(enemyImg.Bounds().Dy())
+		points := enemyStartPoints
+		maxPoints := enemyStartPoints
+		enemies = append(enemies, &Enemy{
+			Player: Player{
+				x:         x,
+				y:         y,
+				w:         w,
+				h:         h,
+				angle:     0,
+				lasers:    []*Laser{},
+				img:       enemyImg,
+				ySpeed:    0,
+				xSpeed:    0,
+				points:    points,
+				maxPoints: maxPoints,
+				healthBar: HealthBar{
+					x:         x,
+					y:         y - h,
+					w:         w,
+					h:         healthBarSize,
+					points:    points,
+					maxPoints: maxPoints,
+				},
+			},
+			dotTargetIndex:  -1,
+			visibleRange:    float64(int(math.Min(screenWidth, screenHeight))+rand.Intn(int(math.Max(screenWidth, screenHeight))-int(math.Min(screenWidth, screenHeight)))) / 2,
+			greedy:          0.4,
+			aggressive:      0.6,
+			shootFreq:       (1 + rand.Intn(3)) * (framesPerSecond / 4),
+			speedMultiplyer: (2 + rand.Intn(4)),
+			movementPrediction: float64(10 + rand.Intn(30)),
 		})
 	}
 }

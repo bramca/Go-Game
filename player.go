@@ -67,7 +67,7 @@ func (p *Player) updateLasers() {
 							A: 0xf0,
 						},
 						msg:      strconv.Itoa(-pointsPerHit),
-						textFont: textFont,
+						textFont: hitTextFont,
 					},
 					duration: 2 * framesPerSecond / 3,
 				})
