@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"math"
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/ebitenutil"
 )
 
 type Player struct {
@@ -21,13 +23,22 @@ type Player struct {
 	healthBar HealthBar
 }
 
-func (p *Player) update(x, y float64) {
+func (p *Player) update(x, y float64, dots []*Dot) {
 	// Move the player based on the mouse position
 	mx, my := ebiten.CursorPosition()
 	p.y += p.ySpeed
 	p.x += p.xSpeed
 	p.healthBar.update(p.x-camX-p.w/2, p.y-(p.h-p.h/3)-camY, p.points, p.maxPoints)
 	p.angle = angleBetweenPoints(x, y, float64(mx), float64(my))
+	for dotIndex := range dots {
+		if dots[dotIndex] != nil && math.Abs(float64(p.y+p.ySpeed)-float64(dots[dotIndex].y)) < p.h/2 && math.Abs(float64(p.x+p.xSpeed)-float64(dots[dotIndex].x)) < p.w/2 {
+			p.points += pointsPerDot
+			dots[dotIndex] = nil
+			if p.points > p.maxPoints {
+				p.maxPoints = p.points
+			}
+		}
+	}
 }
 
 func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {
@@ -38,6 +49,9 @@ func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {
 	op.GeoM.Translate(x, y)
 	screen.DrawImage(p.img, op)
 	p.healthBar.draw(screen)
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("\n\nplayer.x, player.y: %02f, %02f", p.x, p.y))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("\n\n\nplayer.xSpeed, player.ySpeed, player.points: %02f, %02f, %d", p.xSpeed, p.ySpeed, p.points))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("\n\n\n\ndistance player - enemy: %02f", distanceBetweenPoints(p.x, p.y, enemies[0].x, enemies[0].y)))
 }
 
 func (p *Player) updateLasers() {

@@ -3,6 +3,7 @@ package main
 import (
 	"image/color"
 	"log"
+	"math"
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten"
@@ -107,7 +108,7 @@ func (g *Game) Update(screen *ebiten.Image) error {
 	}
 
 	// Update the player rotation based on the mouse position
-	player.update(float64(player.x-camX), float64(player.y-camY))
+	player.update(float64(player.x-camX), float64(player.y-camY), dots)
 
 	if len(player.lasers) > 0 {
 		player.updateLasers()
@@ -233,6 +234,7 @@ func main() {
 			maxPoints: enemyStartPoints,
 		},
 		dotTargetIndex: -1,
+		visibleRange:   math.Min(screenWidth, screenHeight) / 2,
 	})
 	enemies[0].healthBar = HealthBar{
 		x:         enemies[0].x,

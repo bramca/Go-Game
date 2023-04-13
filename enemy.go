@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 	"math"
 	"math/rand"
 
@@ -64,11 +65,9 @@ func (p *Enemy) draw(screen *ebiten.Image, x float64, y float64, dots []*Dot) {
 			p.hits = p.hits[:len(p.hits)-1]
 		}
 	}
-	if p.dotTargetIndex >= 0 && p.dotTargetIndex < len(dots) && dots[p.dotTargetIndex] != nil {
-		ebitenutil.DebugPrint(screen, fmt.Sprintf("\n\ndot.x, dot.y: %d, %d\nangleBetween: %02f", dots[p.dotTargetIndex].x, dots[p.dotTargetIndex].y, p.angle))
-		ebitenutil.DebugPrint(screen, fmt.Sprintf("\n\n\n\nenemy.xSpeed, enemy.ySpeed, enemy.points: %02f, %02f, %d", p.xSpeed, p.ySpeed, p.points))
-		ebitenutil.DebugPrint(screen, fmt.Sprintf("\n\n\n\n\ndistanceToY, distanceToX: %02f, %02f", math.Abs(float64(p.y+p.ySpeed)-float64(dots[p.dotTargetIndex].y)), math.Abs(float64(p.x+p.xSpeed)-float64(dots[p.dotTargetIndex].x))))
-	}
+	ebitenutil.DrawRect(screen, x-p.visibleRange, y-p.visibleRange, p.visibleRange*2, p.visibleRange*2, color.RGBA{R: 0xff, G: 0xff, B: 0xff, A: 0x0f})
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("enemy.x, enemy.y, enemy.visibleRange: %02f, %02f, %02f", p.x, p.y, p.visibleRange))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("\nenemy.xSpeed, enemy.ySpeed, enemy.points: %02f, %02f, %d", p.xSpeed, p.ySpeed, p.points))
 }
 
 func (p *Enemy) updateLasers() {
@@ -84,5 +83,4 @@ func (p *Enemy) drawLasers(screen *ebiten.Image, camX float64, camY float64) {
 }
 
 func (p *Enemy) detectPlayer(screen *ebiten.Image, player *Player) {
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("enemy.x, enemy.y: %02f, %02f\nplayer.x, player.y: %02f, %02f", p.x, p.y, player.x, player.y))
 }

@@ -11,6 +11,10 @@ func angleBetweenPoints(x1, y1, x2, y2 float64) float64 {
 	return math.Atan2(y2-y1, x2-x1)
 }
 
+func distanceBetweenPoints(x1, y1, x2, y2 float64) float64 {
+	return math.Sqrt(math.Pow(x2-x1, 2) + math.Pow(y2-y1, 2))
+}
+
 func randomHex(n int) (string, error) {
 	bytes := make([]byte, n)
 	if _, err := rand.Read(bytes); err != nil {
