@@ -3,6 +3,7 @@ package main
 import (
 	"image/color"
 	"log"
+	"math"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
@@ -17,7 +18,7 @@ const (
 )
 
 var (
-	maxSpeed    = 5.0
+	maxSpeed    = 6.0
 	speedUpdate = 0.2
 
 	camX = 0.0
@@ -26,6 +27,7 @@ var (
 	healthBarSize = 5.0
 
 	playerStartPoints = 15
+	playerFriction    = 0.05
 	player            = &Player{
 		x:         0,
 		y:         0,
@@ -36,9 +38,9 @@ var (
 		maxPoints: playerStartPoints,
 	}
 
-	enemyImages = []string{}
+	enemyImages      = []string{}
 	enemies          = []*Enemy{}
-	enemySpawnRate = 4 * framesPerSecond
+	enemySpawnRate   = 4 * framesPerSecond
 	enemyStartPoints = 20
 	maxEnemies       = 5
 
@@ -77,25 +79,35 @@ type Game struct{}
 func (g *Game) Update(screen *ebiten.Image) error {
 	// Write your game's logical update.
 	frameCount += 1
-	if ebiten.IsKeyPressed(ebiten.KeyDown) {
-		if player.ySpeed < maxSpeed {
+
+	keyPressed := false
+	if math.Sqrt(math.Pow(player.xSpeed, 2)+math.Pow(player.ySpeed, 2)) < maxSpeed {
+		if ebiten.IsKeyPressed(ebiten.KeyDown) {
 			player.ySpeed += speedUpdate
+			keyPressed = true
 		}
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyUp) {
-		if player.ySpeed > -maxSpeed {
+		if ebiten.IsKeyPressed(ebiten.KeyUp) {
 			player.ySpeed -= speedUpdate
+			keyPressed = true
 		}
+
+		if ebiten.IsKeyPressed(ebiten.KeyRight) {
+			player.xSpeed += speedUpdate
+			keyPressed = true
+		}
+		if ebiten.IsKeyPressed(ebiten.KeyLeft) {
+			player.xSpeed -= speedUpdate
+			keyPressed = true
+		}
+
 	}
 
-	if ebiten.IsKeyPressed(ebiten.KeyRight) {
-		if player.xSpeed < maxSpeed {
-			player.xSpeed += speedUpdate
+	if !keyPressed {
+		if player.ySpeed != 0 {
+			player.ySpeed -= (player.ySpeed / math.Abs(player.ySpeed)) * playerFriction
 		}
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-		if player.xSpeed > -maxSpeed {
-			player.xSpeed -= speedUpdate
+		if player.xSpeed != 0 {
+			player.xSpeed -= (player.xSpeed / math.Abs(player.xSpeed)) * playerFriction
 		}
 	}
 
@@ -164,8 +176,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	// Draw the dots at their current position relative to the camera
 	for index := len(dots) - 1; index >= 0; index-- {
-		if dots[index] != nil {
+		if !dots[index].eaten {
 			dots[index].draw(screen, camX, camY)
+		} else if len(dots[index].hits) > 0 {
+			dots[index].drawHits(screen, camX, camY)
 		} else {
 			dots[index] = dots[len(dots)-1]
 			dots = dots[:len(dots)-1]

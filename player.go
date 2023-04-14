@@ -29,9 +29,24 @@ func (p *Player) update(x, y float64, dots []*Dot) {
 	p.healthBar.update(p.x-camX-p.w/2, p.y-(p.h-p.h/3)-camY, p.points, p.maxPoints)
 	p.angle = angleBetweenPoints(x, y, float64(mx), float64(my))
 	for dotIndex := range dots {
-		if dots[dotIndex] != nil && math.Abs(float64(p.y+p.ySpeed)-float64(dots[dotIndex].y)) < p.h/2 && math.Abs(float64(p.x+p.xSpeed)-float64(dots[dotIndex].x)) < p.w/2 {
+		if !dots[dotIndex].eaten && math.Abs(float64(p.y+p.ySpeed)-float64(dots[dotIndex].y)) < p.h/2 && math.Abs(float64(p.x+p.xSpeed)-float64(dots[dotIndex].x)) < p.w/2 {
 			p.points += pointsPerDot
-			dots[dotIndex] = nil
+			dots[dotIndex].hits = append(dots[dotIndex].hits, Hit{
+				Dot: Dot{
+					x: dots[dotIndex].x,
+					y: dots[dotIndex].y,
+					color: color.RGBA{
+						R: 0xff,
+						G: 0xff,
+						B: 0xff,
+						A: 0xf0,
+					},
+					msg:      "+" + strconv.Itoa(pointsPerDot),
+					textFont: hitTextFont,
+				},
+				duration: 2 * framesPerSecond / 3,
+			})
+			dots[dotIndex].eaten = true
 			if p.points > p.maxPoints {
 				p.maxPoints = p.points
 			}

@@ -9,13 +9,14 @@ import (
 
 type Enemy struct {
 	Player
-	visibleRange    float64
-	dotTargetIndex  int
-	hits            []Hit
-	greedy          float64
-	aggressive      float64
-	shootFreq       int
-	speedMultiplyer int
+	visibleRange       float64
+	shootRange         float64
+	dotTargetIndex     int
+	hits               []Hit
+	greedy             float64
+	aggressive         float64
+	shootFreq          int
+	speedMultiplyer    int
 	movementPrediction float64
 }
 
@@ -32,7 +33,7 @@ func (p *Enemy) brain(dots []*Dot, player *Player) {
 			p.eatDots(dots)
 		} else if p.dotTargetIndex < 0 || p.dotTargetIndex > len(dots)-1 {
 			p.searchDots(dots)
-		} else if p.dotTargetIndex >= 0 && dots[p.dotTargetIndex] != nil {
+		} else if p.dotTargetIndex >= 0 && !dots[p.dotTargetIndex].eaten {
 			p.moveToTarget(dots)
 			p.eatDots(dots)
 		}
@@ -110,9 +111,9 @@ func (p *Enemy) moveToTarget(dots []*Dot) {
 
 func (p *Enemy) eatDots(dots []*Dot) {
 	for dotIndex := range dots {
-		if dots[dotIndex] != nil && math.Abs(float64(p.y+p.ySpeed)-float64(dots[dotIndex].y)) < p.h/2 && math.Abs(float64(p.x+p.xSpeed)-float64(dots[dotIndex].x)) < p.w/2 {
+		if !dots[dotIndex].eaten && math.Abs(float64(p.y+p.ySpeed)-float64(dots[dotIndex].y)) < p.h/2 && math.Abs(float64(p.x+p.xSpeed)-float64(dots[dotIndex].x)) < p.w/2 {
 			p.points += pointsPerDot
-			dots[dotIndex] = nil
+			dots[dotIndex].eaten = true
 			if dotIndex == p.dotTargetIndex {
 				p.dotTargetIndex = -1
 				p.ySpeed = 0
@@ -126,9 +127,14 @@ func (p *Enemy) eatDots(dots []*Dot) {
 }
 
 func (p *Enemy) shootLasers(player *Player) {
-	p.angle = angleBetweenPoints(p.x, p.y, player.x + player.xSpeed * p.movementPrediction, player.y + player.ySpeed * p.movementPrediction)
+	p.angle = angleBetweenPoints(p.x, p.y, player.x+player.xSpeed*p.movementPrediction, player.y+player.ySpeed*p.movementPrediction)
 	p.ySpeed = math.Sin(p.angle) * float64(p.speedMultiplyer)
 	p.xSpeed = math.Cos(p.angle) * float64(p.speedMultiplyer)
+
+	if distanceBetweenPoints(p.x, p.y, player.x, player.y) <= p.shootRange {
+		p.ySpeed = 0
+		p.xSpeed = 0
+	}
 
 	if frameCount%p.shootFreq == 0 {
 		p.lasers = append(p.lasers, &Laser{

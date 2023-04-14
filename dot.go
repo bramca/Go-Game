@@ -13,6 +13,20 @@ type Dot struct {
 	color    color.RGBA
 	msg      string
 	textFont font.Face
+	hits     []Hit
+	eaten    bool
+}
+
+func (d *Dot) drawHits(screen *ebiten.Image, camX float64, camY float64) {
+	for i := len(d.hits) - 1; i >= 0; i-- {
+		if d.hits[i].duration > 0 {
+			d.hits[i].update()
+			d.hits[i].draw(screen, camX, camY)
+		} else {
+			d.hits[i] = d.hits[len(d.hits)-1]
+			d.hits = d.hits[:len(d.hits)-1]
+		}
+	}
 }
 
 func (d *Dot) draw(screen *ebiten.Image, camX float64, camY float64) {

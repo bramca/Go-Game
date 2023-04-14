@@ -57,6 +57,9 @@ func spawnEnemies() {
 		h := float64(enemyImg.Bounds().Dy())
 		points := enemyStartPoints
 		maxPoints := enemyStartPoints
+		visibleRange := float64(int(math.Min(screenWidth, screenHeight))+rand.Intn(int(math.Max(screenWidth, screenHeight))-int(math.Min(screenWidth, screenHeight)))) / 2
+		aggressiveness := 0.6
+		greediness := 0.4
 		enemies = append(enemies, &Enemy{
 			Player: Player{
 				x:         x,
@@ -79,12 +82,13 @@ func spawnEnemies() {
 					maxPoints: maxPoints,
 				},
 			},
-			dotTargetIndex:  -1,
-			visibleRange:    float64(int(math.Min(screenWidth, screenHeight))+rand.Intn(int(math.Max(screenWidth, screenHeight))-int(math.Min(screenWidth, screenHeight)))) / 2,
-			greedy:          0.4,
-			aggressive:      0.6,
-			shootFreq:       (1 + rand.Intn(3)) * (framesPerSecond / 4),
-			speedMultiplyer: (2 + rand.Intn(4)),
+			dotTargetIndex:     -1,
+			visibleRange:       visibleRange,
+			shootRange:         (1 - aggressiveness) * visibleRange,
+			greedy:             greediness,
+			aggressive:         aggressiveness,
+			shootFreq:          (1 + rand.Intn(3)) * (framesPerSecond / 4),
+			speedMultiplyer:    (2 + rand.Intn(4)),
 			movementPrediction: float64(10 + rand.Intn(30)),
 		})
 	}
