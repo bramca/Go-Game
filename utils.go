@@ -49,7 +49,7 @@ func spawnDots() {
 }
 
 func spawnEnemies() {
-	for i := len(enemies); i < maxEnemies; i++ {
+	for i := len(enemies); i < maxEnemies+int(player.score/100); i++ {
 		enemyImg, _, _ := ebitenutil.NewImageFromFile(enemyImages[rand.Intn(len(enemyImages))], ebiten.FilterDefault)
 		x := camX + float64(rand.Intn(screenWidth*2))
 		y := camY + float64(rand.Intn(screenHeight*2))

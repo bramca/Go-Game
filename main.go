@@ -4,6 +4,7 @@ import (
 	"image/color"
 	"log"
 	"math"
+	"strconv"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
@@ -28,6 +29,8 @@ var (
 
 	playerStartPoints = 15
 	playerFriction    = 0.05
+	playerLaserColor  = color.RGBA{R: 183, G: 244, B: 216, A: 255}
+	scoreColor        = color.RGBA{R: 255, G: 255, B: 255, A: 240}
 	player            = &Player{
 		x:         0,
 		y:         0,
@@ -42,6 +45,8 @@ var (
 	enemies          = []*Enemy{}
 	enemySpawnRate   = 4 * framesPerSecond
 	enemyStartPoints = 20
+	enemyHitColor    = color.RGBA{R: 255, G: 240, B: 0, A: 240}
+	enemyLaserColor  = color.RGBA{R: 255, G: 0, B: 0, A: 255}
 	maxEnemies       = 5
 
 	framesPerSecond = 60
@@ -53,16 +58,19 @@ var (
 	dotSpawnRate  = 3 * framesPerSecond
 	dotSpawnCount = 20
 	dotHexSize    = 3
+	dotHitColor   = color.RGBA{R: 147, G: 250, B: 165, A: 255}
 	pointsPerDot  = 1
 
-	dotTextFont font.Face
-	hitTextFont font.Face
+	dotTextFont   font.Face
+	hitTextFont   font.Face
+	scoreTextFont font.Face
 
-	hitSize = 13
+	hitSize   = 13
+	scoreSize = 14
 
-	laserSpeed   = 8.0
-	maxLasers    = 10
-	pointsPerHit = 2
+	laserSpeed    = 8.0
+	laserDuration = 5 * framesPerSecond
+	pointsPerHit  = 2
 
 	mouseButtonClicked = false
 
@@ -130,8 +138,10 @@ func (g *Game) Update(screen *ebiten.Image) error {
 
 	// Update enemies
 	for _, enemy := range enemies {
-		enemy.brain(dots, player)
-		enemy.update()
+		if !enemy.dead {
+			enemy.brain(dots, player)
+			enemy.update()
+		}
 		if len(enemy.lasers) > 0 {
 			enemy.updateLasers()
 		}
@@ -150,15 +160,13 @@ func (g *Game) Update(screen *ebiten.Image) error {
 
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) && !mouseButtonClicked {
 		player.lasers = append(player.lasers, &Laser{
-			x:     player.x,
-			y:     player.y,
-			angle: player.angle,
-			speed: laserSpeed,
+			x:        player.x,
+			y:        player.y,
+			angle:    player.angle,
+			speed:    laserSpeed,
+			color:    playerLaserColor,
+			duration: laserDuration,
 		})
-		if len(player.lasers) > maxLasers {
-			player.lasers[0] = player.lasers[len(player.lasers)-1]
-			player.lasers = player.lasers[1:]
-		}
 		mouseButtonClicked = true
 	}
 	return nil
@@ -188,8 +196,25 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	// Draw the enemies
 	for index, enemy := range enemies {
-		if enemy.points > 0 {
+		if enemy.points > 0 && !enemy.dead {
 			enemy.draw(screen, float64(enemy.x-camX), float64(enemy.y-camY), dots)
+			enemy.drawHits(screen)
+			enemy.drawLasers(screen, enemy.x-camX, enemy.y-camY)
+		} else if !enemy.dead {
+			enemy.hits = append(enemy.hits, Hit{
+				Dot: Dot{
+					x:        int(enemy.x),
+					y:        int(enemy.y - enemy.h),
+					color:    enemyHitColor,
+					msg:      "+" + strconv.Itoa(enemy.maxPoints),
+					textFont: hitTextFont,
+				},
+				duration: 2 * framesPerSecond / 3,
+			})
+			enemy.dead = true
+			player.score += enemy.maxPoints
+		} else if len(enemy.hits) > 0 || len(enemy.lasers) > 0 {
+			enemy.drawHits(screen)
 			enemy.drawLasers(screen, enemy.x-camX, enemy.y-camY)
 		} else {
 			enemies[index] = enemies[len(enemies)-1]
@@ -201,6 +226,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	player.drawLasers(screen, camX, camY)
 
 	// Draw the player
+	player.drawScore(screen)
 	player.draw(screen, float64(player.x-camX), float64(player.y-camY))
 
 	// Draw recticle
@@ -249,6 +275,11 @@ func main() {
 	})
 	hitTextFont, _ = opentype.NewFace(tt, &opentype.FaceOptions{
 		Size:    float64(hitSize),
+		DPI:     dpi,
+		Hinting: font.HintingVertical,
+	})
+	scoreTextFont, _ = opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    float64(scoreSize),
 		DPI:     dpi,
 		Hinting: font.HintingVertical,
 	})

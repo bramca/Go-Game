@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"math"
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/text"
 )
 
 type Player struct {
@@ -19,6 +21,7 @@ type Player struct {
 	points    int
 	maxPoints int
 	healthBar HealthBar
+	score     int
 }
 
 func (p *Player) update(x, y float64, dots []*Dot) {
@@ -31,16 +34,12 @@ func (p *Player) update(x, y float64, dots []*Dot) {
 	for dotIndex := range dots {
 		if !dots[dotIndex].eaten && math.Abs(float64(p.y+p.ySpeed)-float64(dots[dotIndex].y)) < p.h/2 && math.Abs(float64(p.x+p.xSpeed)-float64(dots[dotIndex].x)) < p.w/2 {
 			p.points += pointsPerDot
+			p.score += pointsPerDot
 			dots[dotIndex].hits = append(dots[dotIndex].hits, Hit{
 				Dot: Dot{
-					x: dots[dotIndex].x,
-					y: dots[dotIndex].y,
-					color: color.RGBA{
-						R: 0xff,
-						G: 0xff,
-						B: 0xff,
-						A: 0xf0,
-					},
+					x:        dots[dotIndex].x,
+					y:        dots[dotIndex].y,
+					color:    dotHitColor,
 					msg:      "+" + strconv.Itoa(pointsPerDot),
 					textFont: hitTextFont,
 				},
@@ -54,6 +53,10 @@ func (p *Player) update(x, y float64, dots []*Dot) {
 	}
 }
 
+func (p *Player) drawScore(screen *ebiten.Image) {
+	text.Draw(screen, fmt.Sprintf("Score: %d", p.score), scoreTextFont, scoreSize, scoreSize+10, scoreColor)
+}
+
 func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {
 	// Draw the player
 	op := &ebiten.DrawImageOptions{}
@@ -65,10 +68,10 @@ func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {
 }
 
 func (p *Player) updateLasers() {
-	for index, laser := range p.lasers {
+	for index := len(p.lasers) - 1; index >= 0; index-- {
 		hit := false
 		for _, enemy := range enemies {
-			if math.Abs(float64(laser.y+laser.speed*math.Sin(laser.angle))-float64(enemy.y)) < enemy.h/2 && math.Abs(float64(laser.x+laser.speed*math.Cos(laser.angle))-float64(enemy.x)) < enemy.w/2 {
+			if !enemy.dead && math.Abs(float64(p.lasers[index].y+p.lasers[index].speed*math.Sin(p.lasers[index].angle))-float64(enemy.y)) < enemy.h/2 && math.Abs(float64(p.lasers[index].x+p.lasers[index].speed*math.Cos(p.lasers[index].angle))-float64(enemy.x)) < enemy.w/2 {
 				enemy.points -= pointsPerHit
 				hit = true
 				enemy.hits = append(enemy.hits, Hit{
@@ -93,12 +96,17 @@ func (p *Player) updateLasers() {
 			p.lasers = p.lasers[:len(p.lasers)-1]
 			continue
 		}
-		laser.update()
+		p.lasers[index].update()
 	}
 }
 
 func (p *Player) drawLasers(screen *ebiten.Image, camX float64, camY float64) {
-	for _, laser := range p.lasers {
-		laser.draw(screen, camX, camY)
+	for index := len(p.lasers) - 1; index >= 0; index-- {
+		if p.lasers[index].duration < 0 {
+			p.lasers[index] = p.lasers[len(p.lasers)-1]
+			p.lasers = p.lasers[:len(p.lasers)-1]
+			continue
+		}
+		p.lasers[index].draw(screen, camX, camY)
 	}
 }

@@ -18,6 +18,7 @@ type Enemy struct {
 	shootFreq          int
 	speedMultiplyer    int
 	movementPrediction float64
+	dead               bool
 }
 
 func (p *Enemy) brain(dots []*Dot, player *Player) {
@@ -63,6 +64,9 @@ func (p *Enemy) draw(screen *ebiten.Image, x float64, y float64, dots []*Dot) {
 	op.GeoM.Translate(x, y)
 	screen.DrawImage(p.img, op)
 	p.healthBar.draw(screen)
+}
+
+func (p *Enemy) drawHits(screen *ebiten.Image) {
 	for i := len(p.hits) - 1; i >= 0; i-- {
 		if p.hits[i].duration > 0 {
 			p.hits[i].update()
@@ -75,9 +79,9 @@ func (p *Enemy) draw(screen *ebiten.Image, x float64, y float64, dots []*Dot) {
 }
 
 func (p *Enemy) updateLasers() {
-	for index, laser := range p.lasers {
+	for index := len(p.lasers) - 1; index >= 0; index-- {
 		hit := false
-		if math.Abs(float64(laser.y+laser.speed*math.Sin(laser.angle))-float64(player.y)) < player.h/2 && math.Abs(float64(laser.x+laser.speed*math.Cos(laser.angle))-float64(player.x)) < player.w/2 {
+		if math.Abs(float64(p.lasers[index].y+p.lasers[index].speed*math.Sin(p.lasers[index].angle))-float64(player.y)) < player.h/2 && math.Abs(float64(p.lasers[index].x+p.lasers[index].speed*math.Cos(p.lasers[index].angle))-float64(player.x)) < player.w/2 {
 			player.points -= pointsPerHit
 			hit = true
 		}
@@ -86,13 +90,18 @@ func (p *Enemy) updateLasers() {
 			p.lasers = p.lasers[:len(p.lasers)-1]
 			continue
 		}
-		laser.update()
+		p.lasers[index].update()
 	}
 }
 
 func (p *Enemy) drawLasers(screen *ebiten.Image, camX float64, camY float64) {
-	for _, laser := range p.lasers {
-		laser.draw(screen, p.x-camX, p.y-camY)
+	for index := len(p.lasers) - 1; index >= 0; index-- {
+		if p.lasers[index].duration < 0 {
+			p.lasers[index] = p.lasers[len(p.lasers)-1]
+			p.lasers = p.lasers[1:]
+			continue
+		}
+		p.lasers[index].draw(screen, p.x-camX, p.y-camY)
 	}
 }
 
@@ -138,15 +147,12 @@ func (p *Enemy) shootLasers(player *Player) {
 
 	if frameCount%p.shootFreq == 0 {
 		p.lasers = append(p.lasers, &Laser{
-			x:     p.x,
-			y:     p.y,
-			angle: p.angle,
-			speed: laserSpeed,
+			x:        p.x,
+			y:        p.y,
+			angle:    p.angle,
+			speed:    laserSpeed,
+			color:    enemyLaserColor,
+			duration: laserDuration,
 		})
-
-		if len(p.lasers) > maxLasers {
-			p.lasers[0] = p.lasers[len(p.lasers)-1]
-			p.lasers = p.lasers[1:]
-		}
 	}
 }
