@@ -101,9 +101,7 @@ func initialize() {
 
 	// Generate a set of random dots if the dots slice is empty
 	dpi := 72.0
-	tt, _ := opentype.Parse(fonts.MPlus1pRegular_ttf)
-
-	tt, _ = opentype.Parse(fonts.PressStart2P_ttf)
+	tt, _ := opentype.Parse(fonts.PressStart2P_ttf)
 	dotTextFont, _ = opentype.NewFace(tt, &opentype.FaceOptions{
 		Size:    float64(dotFontSize),
 		DPI:     dpi,
