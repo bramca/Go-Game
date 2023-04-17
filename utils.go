@@ -6,8 +6,10 @@ import (
 	"math"
 	"math/rand"
 
-	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/opentype"
 )
 
 func angleBetweenPoints(x1, y1, x2, y2 float64) float64 {
@@ -26,10 +28,10 @@ func randomHex(n int) (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-func spawnDots() {
+func spawnDots(xBound, yBound int) {
 	for i := 0; i < dotSpawnCount; i++ {
-		x := int(camX + float64(rand.Intn(screenWidth*2)))
-		y := int(camY + float64(rand.Intn(screenHeight*2)))
+		x := int(camX + float64(rand.Intn(xBound)))
+		y := int(camY + float64(rand.Intn(yBound)))
 		// x := int(camX + float64(rand.Intn(screenWidth)))
 		// y := int(camY + float64(rand.Intn(screenHeight)))
 		msg, _ := randomHex(4)
@@ -50,7 +52,7 @@ func spawnDots() {
 
 func spawnEnemies() {
 	for i := len(enemies); i < maxEnemies+int(player.score/100); i++ {
-		enemyImg, _, _ := ebitenutil.NewImageFromFile(enemyImages[rand.Intn(len(enemyImages))], ebiten.FilterDefault)
+		enemyImg, _, _ := ebitenutil.NewImageFromFile(enemyImages[rand.Intn(len(enemyImages))])
 		x := camX + float64(rand.Intn(screenWidth*2))
 		y := camY + float64(rand.Intn(screenHeight*2))
 		w := float64(enemyImg.Bounds().Dx())
@@ -92,4 +94,39 @@ func spawnEnemies() {
 			movementPrediction: float64(10 + rand.Intn(30)),
 		})
 	}
+}
+
+func initialize() {
+	enemyImages = []string{"./resources/rust.png", "./resources/cpp.png", "./resources/java.png", "./resources/haskell.png", "./resources/javascript.png", "./resources/python.png", "./resources/csharp.png"}
+
+	// Generate a set of random dots if the dots slice is empty
+	dpi := 72.0
+	tt, _ := opentype.Parse(fonts.MPlus1pRegular_ttf)
+
+	tt, _ = opentype.Parse(fonts.PressStart2P_ttf)
+	dotTextFont, _ = opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    float64(dotFontSize),
+		DPI:     dpi,
+		Hinting: font.HintingVertical,
+	})
+	hitTextFont, _ = opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    float64(hitFontSize),
+		DPI:     dpi,
+		Hinting: font.HintingVertical,
+	})
+	scoreTextFont, _ = opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    float64(scoreFontSize),
+		DPI:     dpi,
+		Hinting: font.HintingVertical,
+	})
+	titleArcadeFont, _ = opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    float64(titleFontSize),
+		DPI:     dpi,
+		Hinting: font.HintingFull,
+	})
+	arcadeFont, _ = opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    float64(fontSize),
+		DPI:     dpi,
+		Hinting: font.HintingFull,
+	})
 }

@@ -6,8 +6,8 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/text"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text"
 )
 
 type Player struct {
@@ -54,7 +54,7 @@ func (p *Player) update(x, y float64, dots []*Dot) {
 }
 
 func (p *Player) drawScore(screen *ebiten.Image) {
-	text.Draw(screen, fmt.Sprintf("Score: %d", p.score), scoreTextFont, scoreSize, scoreSize+10, scoreColor)
+	text.Draw(screen, fmt.Sprintf("Score: %d", p.score), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
 }
 
 func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {
