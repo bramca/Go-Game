@@ -153,6 +153,7 @@ func (p *Enemy) shootLasers(player *Player) {
 			speed:    laserSpeed,
 			color:    enemyLaserColor,
 			duration: laserDuration,
+			size:     laserSize,
 		})
 	}
 }

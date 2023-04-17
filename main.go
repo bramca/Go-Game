@@ -26,26 +26,31 @@ const (
 )
 
 var (
-	maxSpeed    = 6.0
-	speedUpdate = 0.2
+	playerStartSpeed        = 6.0
+	playerStartAcceleration = 0.2
 
 	camX = 0.0
 	camY = 0.0
 
 	healthBarSize = 5.0
 
-	playerStartPoints = 15
-	playerFriction    = 0.05
-	playerLaserColor  = color.RGBA{R: 183, G: 244, B: 216, A: 255}
-	scoreColor        = color.RGBA{R: 255, G: 255, B: 255, A: 240}
-	player            = &Player{
-		x:         0,
-		y:         0,
-		w:         20,
-		h:         30,
-		angle:     0.0,
-		points:    playerStartPoints,
-		maxPoints: playerStartPoints,
+	playerStartPoints    = 15
+	playerFriction       = 0.05
+	playerLaserColor     = color.RGBA{R: 183, G: 244, B: 216, A: 255}
+	scoreColor           = color.RGBA{R: 255, G: 255, B: 255, A: 240}
+	playerStartFireRate  = framesPerSecond / 3
+	playerFireFrameCount = -1
+	player               = &Player{
+		x:            0,
+		y:            0,
+		w:            20,
+		h:            30,
+		angle:        0.0,
+		points:       playerStartPoints,
+		maxPoints:    playerStartPoints,
+		fireRate:     playerStartFireRate,
+		speed:        playerStartSpeed,
+		acceleration: playerStartAcceleration,
 	}
 
 	enemyImages      = []string{}
@@ -82,6 +87,7 @@ var (
 
 	laserSpeed    = 8.0
 	laserDuration = 5 * framesPerSecond
+	laserSize     = 14.0
 	pointsPerHit  = 2
 
 	mouseButtonClicked = false
@@ -117,6 +123,9 @@ func (g *Game) initialize() {
 		maxPoints: player.maxPoints,
 	}
 	player.score = 0
+	player.fireRate = playerStartFireRate
+	player.speed = playerStartSpeed
+	player.acceleration = playerStartAcceleration
 
 	// Calculate the position of the screen center based on the player's position
 	camX = player.x + player.w/2 - screenWidth/2
@@ -149,22 +158,22 @@ func (g *Game) Update() error {
 		frameCount += 1
 
 		keyPressed := false
-		if math.Sqrt(math.Pow(player.xSpeed, 2)+math.Pow(player.ySpeed, 2)) < maxSpeed {
+		if math.Sqrt(math.Pow(player.xSpeed, 2)+math.Pow(player.ySpeed, 2)) < player.speed {
 			if ebiten.IsKeyPressed(ebiten.KeyDown) || ebiten.IsKeyPressed(ebiten.KeyS) {
-				player.ySpeed += speedUpdate
+				player.ySpeed += player.acceleration
 				keyPressed = true
 			}
 			if ebiten.IsKeyPressed(ebiten.KeyUp) || ebiten.IsKeyPressed(ebiten.KeyZ) || ebiten.IsKeyPressed(ebiten.KeyW) {
-				player.ySpeed -= speedUpdate
+				player.ySpeed -= player.acceleration
 				keyPressed = true
 			}
 
 			if ebiten.IsKeyPressed(ebiten.KeyRight) || ebiten.IsKeyPressed(ebiten.KeyD) {
-				player.xSpeed += speedUpdate
+				player.xSpeed += player.acceleration
 				keyPressed = true
 			}
 			if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyQ) || ebiten.IsKeyPressed(ebiten.KeyA) {
-				player.xSpeed -= speedUpdate
+				player.xSpeed -= player.acceleration
 				keyPressed = true
 			}
 
@@ -215,19 +224,26 @@ func (g *Game) Update() error {
 		}
 
 		if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-			mouseButtonClicked = false
+			// mouseButtonClicked = false
+			playerFireFrameCount = -1
 		}
 
-		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) && !mouseButtonClicked {
-			player.lasers = append(player.lasers, &Laser{
-				x:        player.x,
-				y:        player.y,
-				angle:    player.angle,
-				speed:    laserSpeed,
-				color:    playerLaserColor,
-				duration: laserDuration,
-			})
-			mouseButtonClicked = true
+		// if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) && !mouseButtonClicked {
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+			playerFireFrameCount += 1
+			if playerFireFrameCount%player.fireRate == 0 {
+				player.lasers = append(player.lasers, &Laser{
+					x:        player.x,
+					y:        player.y,
+					angle:    player.angle,
+					speed:    laserSpeed,
+					color:    playerLaserColor,
+					duration: laserDuration,
+					size:     laserSize,
+				})
+				playerFireFrameCount = 0
+			}
+			// mouseButtonClicked = true
 		}
 	}
 	return nil

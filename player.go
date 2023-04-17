@@ -11,17 +11,20 @@ import (
 )
 
 type Player struct {
-	x, y      float64
-	w, h      float64
-	angle     float64
-	lasers    []*Laser
-	img       *ebiten.Image
-	ySpeed    float64
-	xSpeed    float64
-	points    int
-	maxPoints int
-	healthBar HealthBar
-	score     int
+	x, y         float64
+	w, h         float64
+	angle        float64
+	lasers       []*Laser
+	img          *ebiten.Image
+	ySpeed       float64
+	xSpeed       float64
+	points       int
+	maxPoints    int
+	healthBar    HealthBar
+	score        int
+	fireRate     int
+	speed        float64
+	acceleration float64
 }
 
 func (p *Player) update(x, y float64, dots []*Dot) {
@@ -34,7 +37,6 @@ func (p *Player) update(x, y float64, dots []*Dot) {
 	for dotIndex := range dots {
 		if !dots[dotIndex].eaten && math.Abs(float64(p.y+p.ySpeed)-float64(dots[dotIndex].y)) < p.h/2 && math.Abs(float64(p.x+p.xSpeed)-float64(dots[dotIndex].x)) < p.w/2 {
 			p.points += pointsPerDot
-			p.score += pointsPerDot
 			dots[dotIndex].hits = append(dots[dotIndex].hits, Hit{
 				Dot: Dot{
 					x:        dots[dotIndex].x,
