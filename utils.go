@@ -52,7 +52,7 @@ func spawnDots(xBound, yBound int) {
 
 func spawnEnemies() {
 	for i := len(enemies); i < maxEnemies+int(player.score/100); i++ {
-		enemyImg, _, _ := ebitenutil.NewImageFromFile(enemyImages[rand.Intn(len(enemyImages))])
+		enemyImg := enemyImages[rand.Intn(len(enemyImages))]
 		x := camX + float64(rand.Intn(screenWidth*2))
 		y := camY + float64(rand.Intn(screenHeight*2))
 		w := float64(enemyImg.Bounds().Dx())
@@ -76,13 +76,16 @@ func spawnEnemies() {
 				points:    points,
 				maxPoints: maxPoints,
 				healthBar: HealthBar{
-					x:         x,
-					y:         y - h,
-					w:         w,
-					h:         healthBarSize,
-					points:    points,
-					maxPoints: maxPoints,
+					x:               x,
+					y:               y - h,
+					w:               w,
+					h:               healthBarSize,
+					points:          points,
+					maxPoints:       maxPoints,
+					healthBarColor:  enemyHealthbarColors[0],
+					healthLostColor: enemyHealthbarColors[1],
 				},
+				damage: pointsPerHit,
 			},
 			dotTargetIndex:     -1,
 			visibleRange:       visibleRange,
@@ -96,8 +99,41 @@ func spawnEnemies() {
 	}
 }
 
+func spawnLootBoxes() {
+	for i := len(lootBoxes); i < maxLootBoxes; i++ {
+		x := camX + float64(rand.Intn(screenWidth*4))
+		y := camY + float64(rand.Intn(screenHeight*4))
+		w := float64(lootBoxImage.Bounds().Dx())
+		h := float64(lootBoxImage.Bounds().Dy())
+		lootBoxes = append(lootBoxes, &LootBox{
+			x:         x,
+			y:         y,
+			w:         w,
+			h:         h,
+			broken:    false,
+			reward:    lootRewards[rand.Intn(len(lootRewards))],
+			hitpoints: lootBoxHealth,
+			healthBar: HealthBar{
+				x:               x,
+				y:               y - h,
+				w:               w,
+				h:               healthBarSize,
+				points:          lootBoxHealth,
+				maxPoints:       lootBoxHealth,
+				healthBarColor:  lootBoxHealthbarColors[0],
+				healthLostColor: lootBoxHealthbarColors[1],
+			},
+			img: lootBoxImage,
+		})
+	}
+}
+
 func initialize() {
-	enemyImages = []string{"./resources/rust.png", "./resources/cpp.png", "./resources/java.png", "./resources/haskell.png", "./resources/javascript.png", "./resources/python.png", "./resources/csharp.png"}
+	enemyImageFiles := []string{"./resources/rust.png", "./resources/cpp.png", "./resources/java.png", "./resources/haskell.png", "./resources/javascript.png", "./resources/python.png", "./resources/csharp.png"}
+	for _, imgFile := range enemyImageFiles {
+		enemyImg, _, _ := ebitenutil.NewImageFromFile(imgFile)
+		enemyImages = append(enemyImages, enemyImg)
+	}
 
 	// Generate a set of random dots if the dots slice is empty
 	dpi := 72.0

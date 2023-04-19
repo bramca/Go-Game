@@ -15,6 +15,7 @@ type Laser struct {
 	size     float64
 	color    color.RGBA
 	duration int
+	damage   int
 }
 
 func (l *Laser) update() {

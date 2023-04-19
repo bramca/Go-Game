@@ -25,6 +25,7 @@ type Player struct {
 	fireRate     int
 	speed        float64
 	acceleration float64
+	damage       int
 }
 
 func (p *Player) update(x, y float64, dots []*Dot) {
@@ -74,7 +75,7 @@ func (p *Player) updateLasers() {
 		hit := false
 		for _, enemy := range enemies {
 			if !enemy.dead && math.Abs(float64(p.lasers[index].y+p.lasers[index].speed*math.Sin(p.lasers[index].angle))-float64(enemy.y)) < enemy.h/2 && math.Abs(float64(p.lasers[index].x+p.lasers[index].speed*math.Cos(p.lasers[index].angle))-float64(enemy.x)) < enemy.w/2 {
-				enemy.points -= pointsPerHit
+				enemy.points -= p.lasers[index].damage
 				hit = true
 				enemy.hits = append(enemy.hits, Hit{
 					Dot: Dot{
@@ -86,7 +87,28 @@ func (p *Player) updateLasers() {
 							B: 0xff,
 							A: 0xf0,
 						},
-						msg:      strconv.Itoa(-pointsPerHit),
+						msg:      strconv.Itoa(-p.lasers[index].damage),
+						textFont: hitTextFont,
+					},
+					duration: 2 * framesPerSecond / 3,
+				})
+			}
+		}
+		for _, lootBox := range lootBoxes {
+			if !lootBox.broken && math.Abs(float64(p.lasers[index].y+p.lasers[index].speed*math.Sin(p.lasers[index].angle))-float64(lootBox.y)) < lootBox.h/2 && math.Abs(float64(p.lasers[index].x+p.lasers[index].speed*math.Cos(p.lasers[index].angle))-float64(lootBox.x)) < lootBox.w/2 {
+				lootBox.hitpoints -= p.lasers[index].damage
+				hit = true
+				lootBox.hits = append(lootBox.hits, Hit{
+					Dot: Dot{
+						x: int(lootBox.x),
+						y: int(lootBox.y - lootBox.h/2),
+						color: color.RGBA{
+							R: 0xff,
+							G: 0xff,
+							B: 0xff,
+							A: 0xf0,
+						},
+						msg:      strconv.Itoa(-p.lasers[index].damage),
 						textFont: hitTextFont,
 					},
 					duration: 2 * framesPerSecond / 3,

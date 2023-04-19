@@ -54,6 +54,7 @@ func (p *Enemy) update() {
 	p.y += p.ySpeed
 	p.x += p.xSpeed
 	p.healthBar.update(p.x-camX-p.w/2, p.y-(p.h-p.h/3)-camY, p.points, p.maxPoints)
+	p.damage = p.maxPoints / 10
 }
 
 func (p *Enemy) draw(screen *ebiten.Image, x float64, y float64, dots []*Dot) {
@@ -82,7 +83,7 @@ func (p *Enemy) updateLasers() {
 	for index := len(p.lasers) - 1; index >= 0; index-- {
 		hit := false
 		if math.Abs(float64(p.lasers[index].y+p.lasers[index].speed*math.Sin(p.lasers[index].angle))-float64(player.y)) < player.h/2 && math.Abs(float64(p.lasers[index].x+p.lasers[index].speed*math.Cos(p.lasers[index].angle))-float64(player.x)) < player.w/2 {
-			player.points -= pointsPerHit
+			player.points -= p.lasers[index].damage
 			hit = true
 		}
 		if hit {
@@ -154,6 +155,7 @@ func (p *Enemy) shootLasers(player *Player) {
 			color:    enemyLaserColor,
 			duration: laserDuration,
 			size:     laserSize,
+			damage:   p.damage,
 		})
 	}
 }

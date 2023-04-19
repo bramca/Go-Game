@@ -28,19 +28,23 @@ const (
 var (
 	playerStartSpeed        = 6.0
 	playerStartAcceleration = 0.2
+	pointsPerHit            = 2
+
+	backgroundColor = color.RGBA{R: 8, G: 14, B: 44, A: 1}
 
 	camX = 0.0
 	camY = 0.0
 
 	healthBarSize = 5.0
 
-	playerStartPoints    = 15
-	playerFriction       = 0.05
-	playerLaserColor     = color.RGBA{R: 183, G: 244, B: 216, A: 255}
-	scoreColor           = color.RGBA{R: 255, G: 255, B: 255, A: 240}
-	playerStartFireRate  = framesPerSecond / 3
-	playerFireFrameCount = -1
-	player               = &Player{
+	playerStartPoints     = 15
+	playerFriction        = 0.05
+	playerLaserColor      = color.RGBA{R: 183, G: 244, B: 216, A: 255}
+	scoreColor            = color.RGBA{R: 255, G: 255, B: 255, A: 240}
+	playerStartFireRate   = framesPerSecond / 3
+	playerFireFrameCount  = -1
+	playerHealthbarColors = []color.RGBA{{0, 255, 0, 240}, {255, 0, 0, 240}}
+	player                = &Player{
 		x:            0,
 		y:            0,
 		w:            20,
@@ -51,15 +55,17 @@ var (
 		fireRate:     playerStartFireRate,
 		speed:        playerStartSpeed,
 		acceleration: playerStartAcceleration,
+		damage:       pointsPerHit,
 	}
 
-	enemyImages      = []string{}
-	enemies          = []*Enemy{}
-	enemySpawnRate   = 4 * framesPerSecond
-	enemyStartPoints = 20
-	enemyHitColor    = color.RGBA{R: 255, G: 240, B: 0, A: 240}
-	enemyLaserColor  = color.RGBA{R: 255, G: 0, B: 0, A: 255}
-	maxEnemies       = 5
+	enemyImages          = []*ebiten.Image{}
+	enemies              = []*Enemy{}
+	enemySpawnRate       = 4 * framesPerSecond
+	enemyStartPoints     = 20
+	enemyHitColor        = color.RGBA{R: 255, G: 240, B: 0, A: 240}
+	enemyLaserColor      = color.RGBA{R: 255, G: 0, B: 0, A: 255}
+	enemyHealthbarColors = []color.RGBA{{0, 255, 0, 240}, {255, 0, 0, 240}}
+	maxEnemies           = 5
 
 	framesPerSecond = 60
 	frameCount      = 1
@@ -72,6 +78,15 @@ var (
 	dotHexSize    = 3
 	dotHitColor   = color.RGBA{R: 147, G: 250, B: 165, A: 255}
 	pointsPerDot  = 1
+
+	lootBoxImage           *ebiten.Image
+	lootBoxHealthbarColors = []color.RGBA{{108, 122, 137, 1}, backgroundColor}
+	maxLootBoxes           = 5
+	lootBoxHealth          = 20
+	lootBoxHitColor        = color.RGBA{R: 255, G: 240, B: 0, A: 240}
+	lootBoxSpawnRate       = 6 * framesPerSecond
+	lootBoxes              = []*LootBox{}
+	lootRewards            = []string{}
 
 	dotTextFont     font.Face
 	hitTextFont     font.Face
@@ -88,15 +103,12 @@ var (
 	laserSpeed    = 8.0
 	laserDuration = 5 * framesPerSecond
 	laserSize     = 14.0
-	pointsPerHit  = 2
 
 	mouseButtonClicked = false
 
 	recticle = Recticle{
 		size: 6,
 	}
-
-	backgroundColor = color.RGBA{R: 8, G: 14, B: 44, A: 1}
 )
 
 // Game implements ebiten.Game interface.
@@ -106,6 +118,8 @@ type Game struct {
 
 func (g *Game) initialize() {
 	img, _, _ := ebitenutil.NewImageFromFile("./resources/gopher.png")
+	lootBoxImage, _, _ = ebitenutil.NewImageFromFile("./resources/github.png")
+	lootRewards = []string{"Health Boost", "Firerate Increase", "Movement Increase", "Damage Increase"}
 	dots = []*Dot{}
 	enemies = []*Enemy{}
 
@@ -115,17 +129,20 @@ func (g *Game) initialize() {
 	player.points = playerStartPoints
 	player.maxPoints = playerStartPoints
 	player.healthBar = HealthBar{
-		x:         player.x,
-		y:         player.y - player.h,
-		w:         player.w,
-		h:         healthBarSize,
-		points:    player.points,
-		maxPoints: player.maxPoints,
+		x:               player.x,
+		y:               player.y - player.h,
+		w:               player.w,
+		h:               healthBarSize,
+		points:          player.points,
+		maxPoints:       player.maxPoints,
+		healthBarColor:  playerHealthbarColors[0],
+		healthLostColor: playerHealthbarColors[1],
 	}
 	player.score = 0
 	player.fireRate = playerStartFireRate
 	player.speed = playerStartSpeed
 	player.acceleration = playerStartAcceleration
+	player.damage = pointsPerHit
 
 	// Calculate the position of the screen center based on the player's position
 	camX = player.x + player.w/2 - screenWidth/2
@@ -133,7 +150,9 @@ func (g *Game) initialize() {
 
 	spawnDots(screenWidth, screenHeight)
 
-	spawnEnemies()
+	// spawnEnemies()
+
+	spawnLootBoxes()
 }
 
 // Update proceeds the game state.
@@ -201,8 +220,12 @@ func (g *Game) Update() error {
 			spawnDots(screenWidth*2, screenHeight*2)
 		}
 
-		if frameCount%enemySpawnRate == 0 {
-			spawnEnemies()
+		// if frameCount%enemySpawnRate == 0 {
+		// 	spawnEnemies()
+		// }
+
+		if frameCount%lootBoxSpawnRate == 0 {
+			spawnLootBoxes()
 		}
 
 		// Update enemies
@@ -213,6 +236,13 @@ func (g *Game) Update() error {
 			}
 			if len(enemy.lasers) > 0 {
 				enemy.updateLasers()
+			}
+		}
+
+		// Update Lootboxes
+		for _, lootBox := range lootBoxes {
+			if !lootBox.broken {
+				lootBox.update()
 			}
 		}
 
@@ -240,6 +270,7 @@ func (g *Game) Update() error {
 					color:    playerLaserColor,
 					duration: laserDuration,
 					size:     laserSize,
+					damage:   player.damage,
 				})
 				playerFireFrameCount = 0
 			}
@@ -271,6 +302,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		for index := len(dots) - 1; index >= 0; index-- {
 			dots[index].draw(screen, camX, camY)
 		}
+		recticle.draw(screen)
 	case ModeGameOver:
 		texts := []string{"", "GAME OVER!", "", "", "PRESS SPACE KEY"}
 		for i, l := range texts {
@@ -329,6 +361,31 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 
+		// Draw the lootboxes
+		for index, lootBox := range lootBoxes {
+			if lootBox.hitpoints > 0 && !lootBox.broken {
+				lootBox.draw(screen, float64(lootBox.x-camX), float64(lootBox.y-camY))
+				lootBox.drawHits(screen)
+			} else if !lootBox.broken {
+				lootBox.hits = append(lootBox.hits, Hit{
+					Dot: Dot{
+						x:        int(lootBox.x),
+						y:        int(lootBox.y - lootBox.h),
+						color:    lootBoxHitColor,
+						msg:      "+" + lootBox.reward,
+						textFont: hitTextFont,
+					},
+					duration: framesPerSecond,
+				})
+				lootBox.broken = true
+			} else if len(lootBox.hits) > 0 {
+				lootBox.drawHits(screen)
+			} else {
+				lootBoxes[index] = lootBoxes[len(lootBoxes)-1]
+				lootBoxes = lootBoxes[:len(lootBoxes)-1]
+			}
+		}
+
 		// Draw the lasers
 		player.drawLasers(screen, camX, camY)
 
@@ -347,6 +404,8 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
 }
 
+// TODO: ideas
+// 1. rubber duck that runs away worth a lot of points
 func main() {
 	game := &Game{}
 	// Sepcify the window size as you like. Here, a doulbed size is specified.
