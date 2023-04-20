@@ -36,7 +36,7 @@ func (p *Player) update(x, y float64, dots []*Dot) {
 	p.healthBar.update(p.x-camX-p.w/2, p.y-(p.h-p.h/3)-camY, p.points, p.maxPoints)
 	p.angle = angleBetweenPoints(x, y, float64(mx), float64(my))
 	for dotIndex := range dots {
-		if !dots[dotIndex].eaten && math.Abs(float64(p.y+p.ySpeed)-float64(dots[dotIndex].y)) < p.h/2 && math.Abs(float64(p.x+p.xSpeed)-float64(dots[dotIndex].x)) < p.w/2 {
+		if !dots[dotIndex].eaten && dots[dotIndex].duration > 0 && (distanceBetweenPoints(p.x+p.xSpeed, p.y+p.ySpeed, float64(dots[dotIndex].x), float64(dots[dotIndex].y)) < p.w*0.8 || distanceBetweenPoints(p.x+p.xSpeed, p.y+p.ySpeed, float64(dots[dotIndex].x+len(dots[dotIndex].msg)), float64(dots[dotIndex].y)) < p.w) {
 			p.points += pointsPerDot
 			dots[dotIndex].hits = append(dots[dotIndex].hits, Hit{
 				Dot: Dot{
@@ -79,14 +79,9 @@ func (p *Player) updateLasers() {
 				hit = true
 				enemy.hits = append(enemy.hits, Hit{
 					Dot: Dot{
-						x: int(enemy.x),
-						y: int(enemy.y - enemy.h/2),
-						color: color.RGBA{
-							R: 0xff,
-							G: 0xff,
-							B: 0xff,
-							A: 0xf0,
-						},
+						x:        int(enemy.x),
+						y:        int(enemy.y - enemy.h/2),
+						color:    damageColor,
 						msg:      strconv.Itoa(-p.lasers[index].damage),
 						textFont: hitTextFont,
 					},
@@ -95,7 +90,7 @@ func (p *Player) updateLasers() {
 			}
 		}
 		for _, lootBox := range lootBoxes {
-			if !lootBox.broken && math.Abs(float64(p.lasers[index].y+p.lasers[index].speed*math.Sin(p.lasers[index].angle))-float64(lootBox.y)) < lootBox.h/2 && math.Abs(float64(p.lasers[index].x+p.lasers[index].speed*math.Cos(p.lasers[index].angle))-float64(lootBox.x)) < lootBox.w/2 {
+			if !lootBox.broken && lootBox.duration > 0 && math.Abs(float64(p.lasers[index].y+p.lasers[index].speed*math.Sin(p.lasers[index].angle))-float64(lootBox.y)) < lootBox.h/2 && math.Abs(float64(p.lasers[index].x+p.lasers[index].speed*math.Cos(p.lasers[index].angle))-float64(lootBox.x)) < lootBox.w/2 {
 				lootBox.hitpoints -= p.lasers[index].damage
 				hit = true
 				lootBox.hits = append(lootBox.hits, Hit{

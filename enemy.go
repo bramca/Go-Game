@@ -121,7 +121,7 @@ func (p *Enemy) moveToTarget(dots []*Dot) {
 
 func (p *Enemy) eatDots(dots []*Dot) {
 	for dotIndex := range dots {
-		if !dots[dotIndex].eaten && math.Abs(float64(p.y+p.ySpeed)-float64(dots[dotIndex].y)) < p.h/2 && math.Abs(float64(p.x+p.xSpeed)-float64(dots[dotIndex].x)) < p.w/2 {
+		if !dots[dotIndex].eaten && dots[dotIndex].duration > 0 && (distanceBetweenPoints(p.x+p.xSpeed, p.y+p.ySpeed, float64(dots[dotIndex].x), float64(dots[dotIndex].y)) < p.w*0.8 || distanceBetweenPoints(p.x+p.xSpeed, p.y+p.ySpeed, float64(dots[dotIndex].x+len(dots[dotIndex].msg)), float64(dots[dotIndex].y)) < p.w) {
 			p.points += pointsPerDot
 			dots[dotIndex].eaten = true
 			if dotIndex == p.dotTargetIndex {

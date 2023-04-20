@@ -46,6 +46,7 @@ func spawnDots(xBound, yBound int) {
 			},
 			msg:      msg,
 			textFont: dotTextFont,
+			duration: minDotDuration + rand.Intn(maxDotDuration-minDotDuration),
 		})
 	}
 }
@@ -57,8 +58,8 @@ func spawnEnemies() {
 		y := camY + float64(rand.Intn(screenHeight*2))
 		w := float64(enemyImg.Bounds().Dx())
 		h := float64(enemyImg.Bounds().Dy())
-		points := enemyStartPoints
-		maxPoints := enemyStartPoints
+		points := enemyStartPoints + player.score/100
+		maxPoints := enemyStartPoints + player.score/100
 		visibleRange := float64(int(math.Min(screenWidth, screenHeight))+rand.Intn(int(math.Max(screenWidth, screenHeight))-int(math.Min(screenWidth, screenHeight)))) / 2
 		aggressiveness := 0.6
 		greediness := 0.4
@@ -84,8 +85,9 @@ func spawnEnemies() {
 					maxPoints:       maxPoints,
 					healthBarColor:  enemyHealthbarColors[0],
 					healthLostColor: enemyHealthbarColors[1],
+					textFont:        healthBarFont,
 				},
-				damage: pointsPerHit,
+				damage: pointsPerHit + maxPoints/10,
 			},
 			dotTargetIndex:     -1,
 			visibleRange:       visibleRange,
@@ -105,25 +107,29 @@ func spawnLootBoxes() {
 		y := camY + float64(rand.Intn(screenHeight*4))
 		w := float64(lootBoxImage.Bounds().Dx())
 		h := float64(lootBoxImage.Bounds().Dy())
+		hitPoints := lootBoxHealth + player.score/100
 		lootBoxes = append(lootBoxes, &LootBox{
-			x:         x,
-			y:         y,
-			w:         w,
-			h:         h,
-			broken:    false,
-			reward:    lootRewards[rand.Intn(len(lootRewards))],
-			hitpoints: lootBoxHealth,
+			x:            x,
+			y:            y,
+			w:            w,
+			h:            h,
+			broken:       false,
+			reward:       lootRewards[rand.Intn(len(lootRewards))],
+			hitpoints:    hitPoints,
+			maxHitPoints: hitPoints,
 			healthBar: HealthBar{
 				x:               x,
 				y:               y - h,
 				w:               w,
 				h:               healthBarSize,
-				points:          lootBoxHealth,
-				maxPoints:       lootBoxHealth,
+				points:          hitPoints,
+				maxPoints:       hitPoints,
 				healthBarColor:  lootBoxHealthbarColors[0],
 				healthLostColor: lootBoxHealthbarColors[1],
+				textFont:        healthBarFont,
 			},
-			img: lootBoxImage,
+			img:      lootBoxImage,
+			duration: minLootBoxDuration + rand.Intn(maxLootBoxDuration-minLootBoxDuration),
 		})
 	}
 }
@@ -160,6 +166,11 @@ func initialize() {
 	})
 	arcadeFont, _ = opentype.NewFace(tt, &opentype.FaceOptions{
 		Size:    float64(fontSize),
+		DPI:     dpi,
+		Hinting: font.HintingFull,
+	})
+	healthBarFont, _ = opentype.NewFace(tt, &opentype.FaceOptions{
+		Size:    float64(healthBarFontSize),
 		DPI:     dpi,
 		Hinting: font.HintingFull,
 	})

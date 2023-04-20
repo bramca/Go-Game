@@ -15,6 +15,11 @@ type Dot struct {
 	textFont font.Face
 	hits     []Hit
 	eaten    bool
+	duration int
+}
+
+func (d *Dot) update() {
+	d.duration -= 1
 }
 
 func (d *Dot) drawHits(screen *ebiten.Image, camX float64, camY float64) {

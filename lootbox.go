@@ -3,18 +3,43 @@ package main
 import "github.com/hajimehoshi/ebiten/v2"
 
 type LootBox struct {
-	x, y, w, h float64
-	hits       []Hit
-	broken     bool
-	reward     string
-	hitpoints  int
-	healthBar  HealthBar
-	img        *ebiten.Image
+	x, y, w, h   float64
+	hits         []Hit
+	broken       bool
+	rewardGiven  bool
+	reward       string
+	hitpoints    int
+	maxHitPoints int
+	healthBar    HealthBar
+	img          *ebiten.Image
+	duration     int
 }
 
-// TODO: do the effect of the reward on broken
+func (l *LootBox) giveReward() {
+	switch l.reward {
+	// Health Boost
+	case lootRewards[0]:
+		player.points += player.maxPoints / 3
+		if player.points > player.maxPoints {
+			player.maxPoints = player.points
+		}
+		// Firerate Increase
+	case lootRewards[1]:
+		player.fireRate = player.fireRate * 3 / 4
+		// Movement Increase
+	case lootRewards[2]:
+		player.speed += 0.5
+		player.acceleration += 0.05
+		// Damage Increase
+	case lootRewards[3]:
+		player.damage += pointsPerHit
+	}
+	l.rewardGiven = true
+}
+
 func (l *LootBox) update() {
-	l.healthBar.update(l.x-camX-l.w/2, l.y-(l.h-l.h/3)-camY, l.hitpoints, lootBoxHealth)
+	l.duration -= 1
+	l.healthBar.update(l.x-camX-l.w/2, l.y-(l.h-l.h/3)-camY, l.hitpoints, l.maxHitPoints)
 }
 
 func (l *LootBox) drawHits(screen *ebiten.Image) {

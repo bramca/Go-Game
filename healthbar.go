@@ -1,10 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/text"
+	"golang.org/x/image/font"
 )
 
 type HealthBar struct {
@@ -14,6 +17,7 @@ type HealthBar struct {
 	maxPoints       int
 	healthBarColor  color.RGBA
 	healthLostColor color.RGBA
+	textFont        font.Face
 }
 
 func (h *HealthBar) update(x, y float64, points, maxPoints int) {
@@ -30,4 +34,6 @@ func (h *HealthBar) draw(screen *ebiten.Image) {
 	h2 := h.h
 	ebitenutil.DrawRect(screen, x1, y1, w1, h1, h.healthBarColor)
 	ebitenutil.DrawRect(screen, x2, y2, w2, h2, h.healthLostColor)
+	healthBarMsg := fmt.Sprintf("%d/%d", h.points, h.maxPoints)
+	text.Draw(screen, healthBarMsg, h.textFont, int(h.x), int(h.y), healthBarFontColor)
 }
