@@ -35,6 +35,9 @@ func (l *LootBox) giveReward() {
 		// Damage Increase
 	case lootRewards[3]:
 		player.damage += pointsPerHit
+		// Score Increase
+	case lootRewards[4]:
+		player.score += lootScoreReward
 	}
 	l.rewardGiven = true
 }

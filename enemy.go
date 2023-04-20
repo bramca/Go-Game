@@ -22,6 +22,7 @@ type Enemy struct {
 }
 
 func (p *Enemy) brain(dots []*Dot, player *Player) {
+	//TODO: make enemies behavior more interesting
 	if p.greedy > 0.5 && p.aggressive > 0.5 {
 
 	}

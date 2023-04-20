@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 	"math"
@@ -94,6 +95,7 @@ var (
 	lootBoxSpawnRate       = 6 * framesPerSecond
 	lootBoxes              = []*LootBox{}
 	lootRewards            = []string{}
+	lootScoreReward        = 200
 
 	dotTextFont     font.Face
 	hitTextFont     font.Face
@@ -130,7 +132,7 @@ type Game struct {
 func (g *Game) initialize() {
 	img, _, _ := ebitenutil.NewImageFromFile("./resources/gopher.png")
 	lootBoxImage, _, _ = ebitenutil.NewImageFromFile("./resources/github.png")
-	lootRewards = []string{"Health", "Firerate", "Movement", "Damage"}
+	lootRewards = []string{"Health", "Firerate", "Movement", "Damage", fmt.Sprintf("%d", lootScoreReward)}
 	dots = []*Dot{}
 	enemies = []*Enemy{}
 	lootBoxes = []*LootBox{}
