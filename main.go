@@ -89,8 +89,8 @@ var (
 	lootBoxImage           *ebiten.Image
 	lootBoxHealthbarColors = []color.RGBA{{108, 122, 137, 1}, backgroundColor}
 	maxLootBoxes           = 5
-	minLootBoxDuration     = 8 * framesPerSecond
-	maxLootBoxDuration     = 16 * framesPerSecond
+	minLootBoxDuration     = 10 * framesPerSecond
+	maxLootBoxDuration     = 20 * framesPerSecond
 	lootBoxHealth          = 20
 	lootBoxHitColor        = color.RGBA{R: 255, G: 240, B: 0, A: 240}
 	lootBoxSpawnRate       = 6 * framesPerSecond

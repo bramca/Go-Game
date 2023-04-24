@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 	"math"
-	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -16,16 +14,26 @@ type TempReward struct {
 	properties map[string]any
 }
 
+func closestLootBoxIndex() int {
+	minDistance := distanceBetweenPoints(player.x, player.y, lootBoxes[0].x, lootBoxes[0].y)
+	minIndex := 0
+	for index, lootBox := range lootBoxes {
+		currDistance := distanceBetweenPoints(player.x, player.y, lootBox.x, lootBox.y)
+		if currDistance < minDistance {
+			minIndex = index
+			minDistance = currDistance
+		}
+	}
+	return minIndex
+}
+
 func (t *TempReward) update() {
 	switch t.reward {
 	// Detect Boxes
 	case lootRewards[6]:
-		lootBoxIndex, ok := -1, false
-		if lootBoxIndex, ok = t.properties["lootBoxIndex"].(int); !ok {
-			t.properties["lootBoxIndex"] = rand.Intn(len(lootBoxes))
-		}
-		if (lootBoxIndex > len(lootBoxes)-1 || lootBoxIndex < 0) && len(lootBoxes) > 0 {
-			t.properties["lootBoxIndex"] = rand.Intn(len(lootBoxes))
+		t.properties["lootBoxIndex"] = -1
+		if len(lootBoxes) > 0 {
+			t.properties["lootBoxIndex"] = closestLootBoxIndex()
 		}
 		t.properties["color"] = color.RGBA{255, 240, 0, 255}
 		t.duration -= 1
@@ -64,7 +72,5 @@ func (t *TempReward) draw(screen *ebiten.Image) {
 				ebitenutil.DrawLine(screen, x2, y2, x4, y4, t.properties["color"].(color.Color))
 			}
 		}
-	case lootRewards[7]:
-		ebitenutil.DebugPrint(screen, fmt.Sprintf("duration: %d", t.duration))
 	}
 }
