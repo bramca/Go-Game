@@ -23,6 +23,7 @@ type Player struct {
 	healthBar    HealthBar
 	score        int
 	fireRate     int
+	laserSpeed   float64
 	speed        float64
 	acceleration float64
 	damage       int

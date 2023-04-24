@@ -55,6 +55,7 @@ var (
 		points:       playerStartPoints,
 		maxPoints:    playerStartPoints,
 		fireRate:     playerStartFireRate,
+		laserSpeed:   laserSpeed,
 		speed:        playerStartSpeed,
 		acceleration: playerStartAcceleration,
 		damage:       pointsPerHit,
@@ -132,7 +133,7 @@ type Game struct {
 func (g *Game) initialize() {
 	img, _, _ := ebitenutil.NewImageFromFile("./resources/gopher.png")
 	lootBoxImage, _, _ = ebitenutil.NewImageFromFile("./resources/github.png")
-	lootRewards = []string{"Health", "Firerate", "Movement", "Damage", fmt.Sprintf("%d", lootScoreReward)}
+	lootRewards = []string{"Health", "Firerate", "Movement", "Damage", fmt.Sprintf("%d", lootScoreReward), "Laser Speed"}
 	dots = []*Dot{}
 	enemies = []*Enemy{}
 	lootBoxes = []*LootBox{}
@@ -297,7 +298,7 @@ func (g *Game) Update() error {
 					x:        player.x,
 					y:        player.y,
 					angle:    player.angle,
-					speed:    laserSpeed,
+					speed:    player.laserSpeed,
 					color:    playerLaserColor,
 					duration: laserDuration,
 					size:     laserSize,

@@ -26,18 +26,21 @@ func (l *LootBox) giveReward() {
 		// Firerate Increase
 	case lootRewards[1]:
 		if player.fireRate*3/4 > 0 {
-			player.fireRate = player.fireRate * 3 / 4
+			player.fireRate = player.fireRate * 4 / 5
 		}
 		// Movement Increase
 	case lootRewards[2]:
-		player.speed += 0.5
-		player.acceleration += 0.05
+		player.speed += 0.2
+		player.acceleration += 0.02
 		// Damage Increase
 	case lootRewards[3]:
 		player.damage += pointsPerHit
 		// Score Increase
 	case lootRewards[4]:
 		player.score += lootScoreReward
+		// Laser Speed
+	case lootRewards[5]:
+		player.laserSpeed += 2.0
 	}
 	l.rewardGiven = true
 }
