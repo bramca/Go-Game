@@ -54,8 +54,8 @@ func spawnDots(xBound, yBound int) {
 func spawnEnemies() {
 	for i := len(enemies); i < maxEnemies+int(player.score/100); i++ {
 		enemyImg := enemyImages[rand.Intn(len(enemyImages))]
-		x := camX + float64(rand.Intn(screenWidth*2))
-		y := camY + float64(rand.Intn(screenHeight*2))
+		x := camX + float64(rand.Intn(screenWidth*4))
+		y := camY + float64(rand.Intn(screenHeight*4))
 		w := float64(enemyImg.Bounds().Dx())
 		h := float64(enemyImg.Bounds().Dy())
 		points := enemyStartPoints + player.score/100
@@ -65,17 +65,18 @@ func spawnEnemies() {
 		greediness := 0.4
 		enemies = append(enemies, &Enemy{
 			Player: Player{
-				x:         x,
-				y:         y,
-				w:         w,
-				h:         h,
-				angle:     0,
-				lasers:    []*Laser{},
-				img:       enemyImg,
-				ySpeed:    0,
-				xSpeed:    0,
-				points:    points,
-				maxPoints: maxPoints,
+				x:          x,
+				y:          y,
+				w:          w,
+				h:          h,
+				angle:      0,
+				lasers:     []*Laser{},
+				laserSpeed: player.speed + float64(rand.Intn(int(laserSpeed))),
+				img:        enemyImg,
+				ySpeed:     0,
+				xSpeed:     0,
+				points:     points,
+				maxPoints:  maxPoints,
 				healthBar: HealthBar{
 					x:               x,
 					y:               y - h,

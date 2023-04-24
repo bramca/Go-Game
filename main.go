@@ -482,6 +482,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 // TODO: ideas
 // 1. rubber duck that runs away, when killed temporary invincible
+// 2. add temporary rewards: invincible, detect other lootboxes
 func main() {
 	game := &Game{}
 	// Sepcify the window size as you like. Here, a doulbed size is specified.
