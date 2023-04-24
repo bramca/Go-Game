@@ -15,12 +15,14 @@ type Player struct {
 	w, h         float64
 	angle        float64
 	lasers       []*Laser
+	tempRewards  []*TempReward
 	img          *ebiten.Image
 	ySpeed       float64
 	xSpeed       float64
 	points       int
 	maxPoints    int
 	healthBar    HealthBar
+	invincible   bool
 	score        int
 	fireRate     int
 	laserSpeed   float64
@@ -54,6 +56,28 @@ func (p *Player) update(x, y float64, dots []*Dot) {
 				p.maxPoints = p.points
 			}
 		}
+	}
+}
+
+func (p *Player) updateTempRewards() {
+	for index := len(p.tempRewards) - 1; index >= 0; index-- {
+		if p.tempRewards[index].duration < 0 {
+			p.tempRewards[index] = p.tempRewards[len(p.tempRewards)-1]
+			p.tempRewards = p.tempRewards[:len(p.tempRewards)-1]
+			continue
+		}
+		p.tempRewards[index].update()
+	}
+}
+
+func (p *Player) drawTempRewards(screen *ebiten.Image) {
+	for index := len(p.tempRewards) - 1; index >= 0; index-- {
+		if p.tempRewards[index].duration < 0 {
+			p.tempRewards[index] = p.tempRewards[len(p.tempRewards)-1]
+			p.tempRewards = p.tempRewards[:len(p.tempRewards)-1]
+			continue
+		}
+		p.tempRewards[index].draw(screen)
 	}
 }
 

@@ -84,7 +84,9 @@ func (p *Enemy) updateLasers() {
 	for index := len(p.lasers) - 1; index >= 0; index-- {
 		hit := false
 		if math.Abs(float64(p.lasers[index].y+p.lasers[index].speed*math.Sin(p.lasers[index].angle))-float64(player.y)) < player.h/2 && math.Abs(float64(p.lasers[index].x+p.lasers[index].speed*math.Cos(p.lasers[index].angle))-float64(player.x)) < player.w/2 {
-			player.points -= p.lasers[index].damage
+			if !player.invincible {
+				player.points -= p.lasers[index].damage
+			}
 			hit = true
 		}
 		if hit {

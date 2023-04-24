@@ -1,6 +1,8 @@
 package main
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 type LootBox struct {
 	x, y, w, h   float64
@@ -41,6 +43,38 @@ func (l *LootBox) giveReward() {
 		// Laser Speed
 	case lootRewards[5]:
 		player.laserSpeed += 2.0
+		// Detect Boxes
+	case lootRewards[6]:
+		rewardActive := false
+		for _, reward := range player.tempRewards {
+			if reward.reward == lootRewards[6] {
+				reward.duration = tempRewardDuration
+				rewardActive = true
+			}
+		}
+		if !rewardActive {
+			player.tempRewards = append(player.tempRewards, &TempReward{
+				duration:   tempRewardDuration,
+				reward:     l.reward,
+				properties: map[string]any{},
+			})
+		}
+		// Invincible
+	case lootRewards[7]:
+		rewardActive := false
+		for _, reward := range player.tempRewards {
+			if reward.reward == l.reward {
+				reward.duration = tempRewardDuration
+				rewardActive = true
+			}
+		}
+		if !rewardActive {
+			player.tempRewards = append(player.tempRewards, &TempReward{
+				duration:   tempRewardDuration,
+				reward:     l.reward,
+				properties: map[string]any{},
+			})
+		}
 	}
 	l.rewardGiven = true
 }

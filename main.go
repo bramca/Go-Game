@@ -98,6 +98,8 @@ var (
 	lootRewards            = []string{}
 	lootScoreReward        = 200
 
+	tempRewardDuration = 20 * framesPerSecond
+
 	dotTextFont     font.Face
 	hitTextFont     font.Face
 	scoreTextFont   font.Face
@@ -133,7 +135,7 @@ type Game struct {
 func (g *Game) initialize() {
 	img, _, _ := ebitenutil.NewImageFromFile("./resources/gopher.png")
 	lootBoxImage, _, _ = ebitenutil.NewImageFromFile("./resources/github.png")
-	lootRewards = []string{"Health", "Firerate", "Movement", "Damage", fmt.Sprintf("%d", lootScoreReward), "Laser Speed"}
+	lootRewards = []string{"Health", "Firerate", "Movement", "Damage", fmt.Sprintf("%d", lootScoreReward), "Laser Speed", "Detect Boxes", "Invincible"}
 	dots = []*Dot{}
 	enemies = []*Enemy{}
 	lootBoxes = []*LootBox{}
@@ -157,6 +159,7 @@ func (g *Game) initialize() {
 		textFont:        healthBarFont,
 	}
 	player.lasers = []*Laser{}
+	player.tempRewards = []*TempReward{}
 	player.score = 0
 	player.fireRate = playerStartFireRate
 	player.speed = playerStartSpeed
@@ -285,6 +288,10 @@ func (g *Game) Update() error {
 			player.updateLasers()
 		}
 
+		if len(player.tempRewards) > 0 {
+			player.updateTempRewards()
+		}
+
 		if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 			// mouseButtonClicked = false
 			playerFireFrameCount = -1
@@ -389,6 +396,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		// Draw the player
 		player.drawScore(screen)
 		player.draw(screen, float64(player.x-camX), float64(player.y-camY))
+		player.drawTempRewards(screen)
 
 		// Draw recticle
 		recticle.draw(screen)
@@ -468,6 +476,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		// Draw the player
 		player.drawScore(screen)
 		player.draw(screen, float64(player.x-camX), float64(player.y-camY))
+		player.drawTempRewards(screen)
 
 		// Draw recticle
 		recticle.draw(screen)
@@ -481,8 +490,8 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 // TODO: ideas
-// 1. rubber duck that runs away, when killed temporary invincible
-// 2. add temporary rewards: invincible, detect other lootboxes
+// 1. rubber duck that runs away, multiple loot box rewards received
+// 2. add temporary rewards: insta kill, vampire
 func main() {
 	game := &Game{}
 	// Sepcify the window size as you like. Here, a doulbed size is specified.
