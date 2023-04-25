@@ -45,36 +45,16 @@ func (l *LootBox) giveReward() {
 		player.laserSpeed += 2.0
 		// Detect Boxes
 	case lootRewards[6]:
-		rewardActive := false
-		for _, reward := range player.tempRewards {
-			if reward.reward == lootRewards[6] {
-				reward.duration = tempRewardDuration
-				rewardActive = true
-			}
-		}
-		if !rewardActive {
-			player.tempRewards = append(player.tempRewards, &TempReward{
-				duration:   tempRewardDuration,
-				reward:     l.reward,
-				properties: map[string]any{},
-			})
-		}
+		activateTempReward(l.reward, tempRewardDuration)
 		// Invincible
 	case lootRewards[7]:
-		rewardActive := false
-		for _, reward := range player.tempRewards {
-			if reward.reward == l.reward {
-				reward.duration = tempRewardDuration
-				rewardActive = true
-			}
-		}
-		if !rewardActive {
-			player.tempRewards = append(player.tempRewards, &TempReward{
-				duration:   tempRewardDuration,
-				reward:     l.reward,
-				properties: map[string]any{},
-			})
-		}
+		activateTempReward(l.reward, tempRewardDuration)
+		// Insta Kill
+	case lootRewards[8]:
+		activateTempReward(l.reward, tempRewardDuration)
+		// Vampire Mode
+	case lootRewards[9]:
+		activateTempReward(l.reward, tempRewardDuration)
 	}
 	l.rewardGiven = true
 }

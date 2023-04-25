@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"golang.org/x/image/font"
 )
@@ -60,6 +59,10 @@ var (
 		acceleration: playerStartAcceleration,
 		damage:       pointsPerHit,
 	}
+	playerImage             *ebiten.Image
+	playerSkullImage        *ebiten.Image
+	playerVampireImage      *ebiten.Image
+	playerVampireSkullImage *ebiten.Image
 
 	enemyImages          = []*ebiten.Image{}
 	enemies              = []*Enemy{}
@@ -133,16 +136,15 @@ type Game struct {
 }
 
 func (g *Game) initialize() {
-	img, _, _ := ebitenutil.NewImageFromFile("./resources/gopher.png")
-	lootBoxImage, _, _ = ebitenutil.NewImageFromFile("./resources/github.png")
-	lootRewards = []string{"Health", "Firerate", "Movement", "Damage", fmt.Sprintf("%d", lootScoreReward), "Laser Speed", "Detect Boxes", "Invincible"}
+	lootRewards = []string{"Health", "Firerate", "Movement", "Damage", fmt.Sprintf("%d", lootScoreReward), "Laser Speed", "Detect Boxes", "Invincible", "Insta Kill", "Vampire Mode"}
 	dots = []*Dot{}
 	enemies = []*Enemy{}
 	lootBoxes = []*LootBox{}
+	backgroundColor = color.RGBA{R: 8, G: 14, B: 44, A: 1}
 
-	player.img = img
-	player.w = float64(img.Bounds().Dx())
-	player.h = float64(img.Bounds().Dy())
+	player.img = playerImage
+	player.w = float64(playerImage.Bounds().Dx())
+	player.h = float64(playerImage.Bounds().Dy())
 	player.xSpeed = 0
 	player.ySpeed = 0
 	player.points = playerStartPoints
@@ -165,6 +167,9 @@ func (g *Game) initialize() {
 	player.speed = playerStartSpeed
 	player.acceleration = playerStartAcceleration
 	player.damage = pointsPerHit
+	player.instaKill = false
+	player.invincible = false
+	player.laserSpeed = laserSpeed
 
 	// Calculate the position of the screen center based on the player's position
 	camX = player.x + player.w/2 - screenWidth/2
@@ -491,7 +496,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 // TODO: ideas
 // 1. rubber duck that runs away, multiple loot box rewards received
-// 2. add temporary rewards: insta kill, vampire
+// 2. add more temporary rewards
 func main() {
 	game := &Game{}
 	// Sepcify the window size as you like. Here, a doulbed size is specified.

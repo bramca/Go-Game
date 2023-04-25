@@ -23,6 +23,8 @@ type Player struct {
 	maxPoints    int
 	healthBar    HealthBar
 	invincible   bool
+	instaKill    bool
+	vampire      bool
 	score        int
 	fireRate     int
 	laserSpeed   float64
@@ -100,14 +102,25 @@ func (p *Player) updateLasers() {
 		hit := false
 		for _, enemy := range enemies {
 			if !enemy.dead && math.Abs(float64(p.lasers[index].y+p.lasers[index].speed*math.Sin(p.lasers[index].angle))-float64(enemy.y)) < enemy.h/2 && math.Abs(float64(p.lasers[index].x+p.lasers[index].speed*math.Cos(p.lasers[index].angle))-float64(enemy.x)) < enemy.w/2 {
-				enemy.points -= p.lasers[index].damage
+				damage := p.lasers[index].damage
+				if p.instaKill {
+					damage = enemy.points
+				}
+				enemy.points -= damage
+				if p.vampire && p.points <= p.maxPoints {
+					healing := damage
+					if p.points+damage > p.maxPoints {
+						healing = p.maxPoints - p.points
+					}
+					p.points += healing
+				}
 				hit = true
 				enemy.hits = append(enemy.hits, Hit{
 					Dot: Dot{
 						x:        int(enemy.x),
 						y:        int(enemy.y - enemy.h/2),
 						color:    damageColor,
-						msg:      strconv.Itoa(-p.lasers[index].damage),
+						msg:      strconv.Itoa(-damage),
 						textFont: hitTextFont,
 					},
 					duration: 2 * framesPerSecond / 3,

@@ -27,6 +27,51 @@ func closestLootBoxIndex() int {
 	return minIndex
 }
 
+func (t *TempReward) apply() {
+	switch t.reward {
+	// Detect Boxes
+	case lootRewards[6]:
+		t.properties["lootBoxIndex"] = -1
+		t.properties["color"] = color.RGBA{255, 240, 0, 255}
+		// Invincible
+	case lootRewards[7]:
+		player.healthBar.healthBarColor = color.RGBA{254, 241, 96, 255}
+		player.invincible = true
+		// Insta Kill
+	case lootRewards[8]:
+		t.properties["originalBackgroundColor"] = backgroundColor
+		t.properties["wasVampire"] = false
+		backgroundColor = color.RGBA{0, 0, 0, 255}
+		player.img = playerSkullImage
+		if player.vampire {
+			player.img = playerVampireSkullImage
+			t.properties["wasVampire"] = true
+		}
+		player.w = float64(player.img.Bounds().Dx())
+		player.h = float64(player.img.Bounds().Dy())
+		camX = player.x + player.w/2 - screenWidth/2
+		camY = player.y + player.h/2 - screenHeight/2
+		player.instaKill = true
+		// Vampire Mode
+	case lootRewards[9]:
+		t.properties["wasInstaKill"] = false
+		t.properties["originalDamageColor"] = damageColor
+		t.properties["originalLaserColor"] = playerLaserColor
+		playerLaserColor = color.RGBA{251, 166, 157, 255}
+		damageColor = color.RGBA{255, 0, 0, 255}
+		player.img = playerVampireImage
+		if player.instaKill {
+			player.img = playerVampireSkullImage
+			t.properties["wasInstaKill"] = true
+		}
+		player.w = float64(player.img.Bounds().Dx())
+		player.h = float64(player.img.Bounds().Dy())
+		camX = player.x + player.w/2 - screenWidth/2
+		camY = player.y + player.h/2 - screenHeight/2
+		player.vampire = true
+	}
+}
+
 func (t *TempReward) update() {
 	switch t.reward {
 	// Detect Boxes
@@ -39,12 +84,47 @@ func (t *TempReward) update() {
 		t.duration -= 1
 		// Invincible
 	case lootRewards[7]:
-		player.healthBar.healthBarColor = color.RGBA{254, 241, 96, 255}
 		t.duration -= 1
-		player.invincible = true
 		if t.duration <= 0 {
 			player.invincible = false
 			player.healthBar.healthBarColor = playerHealthbarColors[0]
+		}
+		// Insta Kill
+	case lootRewards[8]:
+		t.duration -= 1
+		if t.properties["wasVampire"].(bool) && !player.vampire {
+			player.img = playerSkullImage
+			player.w = float64(player.img.Bounds().Dx())
+			player.h = float64(player.img.Bounds().Dy())
+		}
+		if t.duration <= 0 {
+			player.instaKill = false
+			player.img = playerImage
+			if player.vampire {
+				player.img = playerVampireImage
+			}
+			player.w = float64(player.img.Bounds().Dx())
+			player.h = float64(player.img.Bounds().Dy())
+			backgroundColor = t.properties["originalBackgroundColor"].(color.RGBA)
+		}
+		// Vampire Mode
+	case lootRewards[9]:
+		t.duration -= 1
+		if t.properties["wasInstaKill"].(bool) && !player.instaKill {
+			player.img = playerVampireImage
+			player.w = float64(player.img.Bounds().Dx())
+			player.h = float64(player.img.Bounds().Dy())
+		}
+		if t.duration <= 0 {
+			player.vampire = false
+			player.img = playerImage
+			if player.instaKill {
+				player.img = playerSkullImage
+			}
+			player.w = float64(player.img.Bounds().Dx())
+			player.h = float64(player.img.Bounds().Dy())
+			damageColor = t.properties["originalDamageColor"].(color.RGBA)
+			playerLaserColor = t.properties["originalLaserColor"].(color.RGBA)
 		}
 	}
 }

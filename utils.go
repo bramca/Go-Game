@@ -142,6 +142,16 @@ func initialize() {
 		enemyImages = append(enemyImages, enemyImg)
 	}
 
+	lootBoxImage, _, _ = ebitenutil.NewImageFromFile("./resources/github.png")
+
+	playerImage, _, _ = ebitenutil.NewImageFromFile("./resources/gopher.png")
+
+	playerSkullImage, _, _ = ebitenutil.NewImageFromFile("./resources/gopher_skull.png")
+
+	playerVampireImage, _, _ = ebitenutil.NewImageFromFile("./resources/gopher_vampire.png")
+
+	playerVampireSkullImage, _, _ = ebitenutil.NewImageFromFile("./resources/gopher_vampire_skull.png")
+
 	// Generate a set of random dots if the dots slice is empty
 	dpi := 72.0
 	tt, _ := opentype.Parse(fonts.PressStart2P_ttf)
@@ -175,4 +185,23 @@ func initialize() {
 		DPI:     dpi,
 		Hinting: font.HintingFull,
 	})
+}
+
+func activateTempReward(lootReward string, duration int) {
+	rewardActive := false
+	for _, reward := range player.tempRewards {
+		if reward.reward == lootReward {
+			reward.duration = tempRewardDuration
+			rewardActive = true
+		}
+	}
+	if !rewardActive {
+		player.tempRewards = append(player.tempRewards, &TempReward{
+			duration:   duration,
+			reward:     lootReward,
+			properties: map[string]any{},
+		})
+		player.tempRewards[len(player.tempRewards)-1].apply()
+	}
+
 }
