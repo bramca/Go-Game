@@ -29,16 +29,13 @@ func closestLootBoxIndex() int {
 
 func (t *TempReward) apply() {
 	switch t.reward {
-	// Detect Boxes
-	case lootRewards[6]:
+	case "Detect Boxes":
 		t.properties["lootBoxIndex"] = -1
 		t.properties["color"] = color.RGBA{255, 240, 0, 255}
-		// Invincible
-	case lootRewards[7]:
+	case "Invincible":
 		player.healthBar.healthBarColor = color.RGBA{254, 241, 96, 255}
 		player.invincible = true
-		// Insta Kill
-	case lootRewards[8]:
+	case "Insta Kill":
 		t.properties["originalBackgroundColor"] = backgroundColor
 		t.properties["wasVampire"] = false
 		backgroundColor = color.RGBA{0, 0, 0, 255}
@@ -52,8 +49,7 @@ func (t *TempReward) apply() {
 		camX = player.x + player.w/2 - screenWidth/2
 		camY = player.y + player.h/2 - screenHeight/2
 		player.instaKill = true
-		// Vampire Mode
-	case lootRewards[9]:
+	case "Vampire Mode":
 		t.properties["wasInstaKill"] = false
 		t.properties["originalDamageColor"] = damageColor
 		t.properties["originalLaserColor"] = playerLaserColor
@@ -74,23 +70,20 @@ func (t *TempReward) apply() {
 
 func (t *TempReward) update() {
 	switch t.reward {
-	// Detect Boxes
-	case lootRewards[6]:
+	case "Detect Boxes":
 		t.properties["lootBoxIndex"] = -1
 		if len(lootBoxes) > 0 {
 			t.properties["lootBoxIndex"] = closestLootBoxIndex()
 		}
 		t.properties["color"] = color.RGBA{255, 240, 0, 255}
 		t.duration -= 1
-		// Invincible
-	case lootRewards[7]:
+	case "Invincible":
 		t.duration -= 1
 		if t.duration <= 0 {
 			player.invincible = false
 			player.healthBar.healthBarColor = playerHealthbarColors[0]
 		}
-		// Insta Kill
-	case lootRewards[8]:
+	case "Insta Kill":
 		t.duration -= 1
 		if t.properties["wasVampire"].(bool) && !player.vampire {
 			player.img = playerSkullImage
@@ -107,8 +100,7 @@ func (t *TempReward) update() {
 			player.h = float64(player.img.Bounds().Dy())
 			backgroundColor = t.properties["originalBackgroundColor"].(color.RGBA)
 		}
-		// Vampire Mode
-	case lootRewards[9]:
+	case "Vampire Mode":
 		t.duration -= 1
 		if t.properties["wasInstaKill"].(bool) && !player.instaKill {
 			player.img = playerVampireImage
@@ -131,8 +123,7 @@ func (t *TempReward) update() {
 
 func (t *TempReward) draw(screen *ebiten.Image) {
 	switch t.reward {
-	// Detect Boxes
-	case lootRewards[6]:
+	case "Detect Boxes":
 		if lootBoxIndex, ok := t.properties["lootBoxIndex"].(int); ok {
 			if lootBoxIndex <= len(lootBoxes)-1 && lootBoxIndex >= 0 {
 				longEnd := 18.0

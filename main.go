@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 	"log"
 	"math"
@@ -136,7 +135,7 @@ type Game struct {
 }
 
 func (g *Game) initialize() {
-	lootRewards = []string{"Health", "Firerate", "Movement", "Damage", fmt.Sprintf("%d", lootScoreReward), "Laser Speed", "Detect Boxes", "Invincible", "Insta Kill", "Vampire Mode"}
+	lootRewards = []string{"Health", "Firerate", "Movement", "Damage", "Laser Speed", "Detect Boxes", "Invincible", "Insta Kill", "Vampire Mode"}
 	dots = []*Dot{}
 	enemies = []*Enemy{}
 	lootBoxes = []*LootBox{}

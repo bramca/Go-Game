@@ -53,9 +53,10 @@ func spawnDots(xBound, yBound int) {
 
 func spawnEnemies() {
 	for i := len(enemies); i < maxEnemies+int(player.score/100); i++ {
+		numberOfEnemies := maxEnemies + int(player.score/100)
 		enemyImg := enemyImages[rand.Intn(len(enemyImages))]
-		x := camX + float64(rand.Intn(screenWidth*4))
-		y := camY + float64(rand.Intn(screenHeight*4))
+		x := camX + float64(rand.Intn(screenWidth*(4+numberOfEnemies/30)))
+		y := camY + float64(rand.Intn(screenHeight*(4+numberOfEnemies/30)))
 		w := float64(enemyImg.Bounds().Dx())
 		h := float64(enemyImg.Bounds().Dy())
 		points := enemyStartPoints + player.score/100

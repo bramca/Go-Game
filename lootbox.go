@@ -19,41 +19,29 @@ type LootBox struct {
 
 func (l *LootBox) giveReward() {
 	switch l.reward {
-	// Health Boost
-	case lootRewards[0]:
+	case "Health":
 		player.points += player.maxPoints / 3
 		if player.points > player.maxPoints {
 			player.maxPoints = player.points
 		}
-		// Firerate Increase
-	case lootRewards[1]:
+	case "Firerate":
 		if player.fireRate*3/4 > 0 {
 			player.fireRate = player.fireRate * 4 / 5
 		}
-		// Movement Increase
-	case lootRewards[2]:
+	case "Movement":
 		player.speed += 0.2
 		player.acceleration += 0.02
-		// Damage Increase
-	case lootRewards[3]:
+	case "Damage":
 		player.damage += pointsPerHit
-		// Score Increase
-	case lootRewards[4]:
-		player.score += lootScoreReward
-		// Laser Speed
-	case lootRewards[5]:
+	case "Laser Speed":
 		player.laserSpeed += 2.0
-		// Detect Boxes
-	case lootRewards[6]:
+	case "Detect Boxes":
 		activateTempReward(l.reward, tempRewardDuration)
-		// Invincible
-	case lootRewards[7]:
+	case "Invincible":
 		activateTempReward(l.reward, tempRewardDuration)
-		// Insta Kill
-	case lootRewards[8]:
+	case "Insta Kill":
 		activateTempReward(l.reward, tempRewardDuration)
-		// Vampire Mode
-	case lootRewards[9]:
+	case "Vampire Mode":
 		activateTempReward(l.reward, tempRewardDuration)
 	}
 	l.rewardGiven = true
