@@ -5,7 +5,7 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 type Laser struct {
@@ -30,5 +30,5 @@ func (l *Laser) draw(screen *ebiten.Image, x float64, y float64) {
 	laserY := l.y - y
 	x1, y1 := laserX, laserY
 	x2, y2 := laserX+l.size*math.Cos(l.angle), laserY+l.size*math.Sin(l.angle)
-	ebitenutil.DrawLine(screen, x1, y1, x2, y2, l.color)
+	vector.StrokeLine(screen, float32(x1), float32(y1), float32(x2), float32(y2), 3, l.color, false)
 }

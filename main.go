@@ -82,7 +82,6 @@ var (
 	dots           = []*Dot{}
 	dotSpawnRate   = 3 * framesPerSecond
 	dotSpawnCount  = 20
-	dotHexSize     = 3
 	minDotDuration = 8 * framesPerSecond
 	maxDotDuration = 16 * framesPerSecond
 	dotHitColor    = color.RGBA{R: 147, G: 250, B: 165, A: 255}
@@ -98,7 +97,6 @@ var (
 	lootBoxSpawnRate       = 6 * framesPerSecond
 	lootBoxes              = []*LootBox{}
 	lootRewards            = []string{}
-	lootScoreReward        = 200
 
 	tempRewardDuration = 20 * framesPerSecond
 
@@ -121,8 +119,6 @@ var (
 	laserSpeed    = 8.0
 	laserDuration = 5 * framesPerSecond
 	laserSize     = 14.0
-
-	mouseButtonClicked = false
 
 	recticle = Recticle{
 		size: 6,

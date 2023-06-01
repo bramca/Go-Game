@@ -5,7 +5,7 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 type TempReward struct {
@@ -134,13 +134,13 @@ func (t *TempReward) draw(screen *ebiten.Image) {
 				startY := player.y - camY
 				x1, y1 := startX, startY-player.h
 				x2, y2 := x1+longEnd*math.Cos(angle), y1+longEnd*math.Sin(angle)
-				ebitenutil.DrawLine(screen, x1, y1, x2, y2, t.properties["color"].(color.Color))
+				vector.StrokeLine(screen, float32(x1), float32(y1), float32(x2), float32(y2), 1, t.properties["color"].(color.Color), false)
 				angle2 := 2*math.Pi - (math.Pi - angle) - math.Pi/4
 				x3, y3 := x2+smallEnd*math.Cos(angle2), y2+smallEnd*math.Sin(angle2)
-				ebitenutil.DrawLine(screen, x2, y2, x3, y3, t.properties["color"].(color.Color))
+				vector.StrokeLine(screen, float32(x2), float32(y2), float32(x3), float32(y3), 1, t.properties["color"].(color.Color), false)
 				angle3 := 2*math.Pi - (math.Pi - angle) + math.Pi/4
 				x4, y4 := x2+smallEnd*math.Cos(angle3), y2+smallEnd*math.Sin(angle3)
-				ebitenutil.DrawLine(screen, x2, y2, x4, y4, t.properties["color"].(color.Color))
+				vector.StrokeLine(screen, float32(x2), float32(y2), float32(x4), float32(y4), 1, t.properties["color"].(color.Color), false)
 			}
 		}
 	}

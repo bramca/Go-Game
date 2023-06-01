@@ -23,12 +23,12 @@ type Enemy struct {
 
 func (p *Enemy) brain(dots []*Dot, player *Player) {
 	//TODO: make enemies behavior more interesting
-	if p.greedy > 0.5 && p.aggressive > 0.5 {
+	// if p.greedy > 0.5 && p.aggressive > 0.5 {
 
-	}
-	if p.greedy > 0.5 && p.aggressive < 0.5 {
+	// }
+	// if p.greedy > 0.5 && p.aggressive < 0.5 {
 
-	}
+	// }
 	if p.greedy < 0.5 && p.aggressive > 0.5 {
 		if p.detectPlayer(player) {
 			p.shootLasers(player)
@@ -40,9 +40,9 @@ func (p *Enemy) brain(dots []*Dot, player *Player) {
 			p.eatDots(dots)
 		}
 	}
-	if p.greedy < 0.5 && p.aggressive < 0.5 {
+	// if p.greedy < 0.5 && p.aggressive < 0.5 {
 
-	}
+	// }
 }
 
 func (p *Enemy) searchDots(dots []*Dot) {
@@ -110,10 +110,7 @@ func (p *Enemy) drawLasers(screen *ebiten.Image, camX float64, camY float64) {
 }
 
 func (p *Enemy) detectPlayer(player *Player) bool {
-	if distanceBetweenPoints(player.x, player.y, p.x, p.y) < p.visibleRange {
-		return true
-	}
-	return false
+	return distanceBetweenPoints(player.x, player.y, p.x, p.y) < p.visibleRange
 }
 
 func (p *Enemy) moveToTarget(dots []*Dot) {

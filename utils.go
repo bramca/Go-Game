@@ -1,6 +1,7 @@
 package main
 
 import (
+	randcrypto "crypto/rand"
 	"encoding/hex"
 	"image/color"
 	"math"
@@ -22,7 +23,7 @@ func distanceBetweenPoints(x1, y1, x2, y2 float64) float64 {
 
 func randomHex(n int) (string, error) {
 	bytes := make([]byte, n)
-	if _, err := rand.Read(bytes); err != nil {
+	if _, err := randcrypto.Read(bytes); err != nil {
 		return "", err
 	}
 	return hex.EncodeToString(bytes), nil
