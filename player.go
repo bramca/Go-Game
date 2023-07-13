@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"math"
+	"math/rand"
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -31,6 +32,52 @@ type Player struct {
 	speed        float64
 	acceleration float64
 	damage       int
+	gun string
+}
+
+// TODO: add following guns:
+//          - homing lasers - follow the target
+//          - bouncing lasers - bounce on the edge of the map
+//          - piercing lasers -  pierce the enemy
+//          - double lasers - shoot two parallel lasers
+func (p *Player) shoot() {
+	// Adapt variables to weapon
+	var fireRate int
+	switch p.gun {
+	case "Shotgun":
+		fireRate = p.fireRate*2
+	default:
+		fireRate = p.fireRate
+	}
+	if playerFireFrameCount%fireRate == 0 {
+		switch p.gun {
+		case "Shotgun":
+			for i := -math.Pi/12; i < math.Pi/12; i += math.Pi/36 {
+				p.lasers = append(p.lasers, &Laser{
+					x:        p.x,
+					y:        p.y,
+					angle:    p.angle + i,
+					speed:    p.laserSpeed * (0.7 + rand.Float64() * 0.3),
+					color:    playerLaserColor,
+					duration: laserDuration,
+					size:     laserSize,
+					damage:   p.damage,
+				})
+			}
+		default:
+			p.lasers = append(p.lasers, &Laser{
+				x:        p.x,
+				y:        p.y,
+				angle:    p.angle,
+				speed:    p.laserSpeed,
+				color:    playerLaserColor,
+				duration: laserDuration,
+				size:     laserSize,
+				damage:   p.damage,
+			})
+			playerFireFrameCount = 0
+		}
+	}
 }
 
 func (p *Player) update(x, y float64, dots []*Dot) {
@@ -85,6 +132,11 @@ func (p *Player) drawTempRewards(screen *ebiten.Image) {
 
 func (p *Player) drawScore(screen *ebiten.Image) {
 	text.Draw(screen, fmt.Sprintf("Score: %d", p.score), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+	enters := "\n"
+	for _, rd := range rubberDucks {
+		text.Draw(screen, fmt.Sprintf("%srubberDuck: %d - %.2f - %.2f - %d - %.2f - %.2f - %v - %s", enters, rd.points, rd.x, rd.y, rd.speedMultiplyer, rd.visibleRange, rd.fleeRange, rd.fleeing, rd.reward), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+		enters += "\n"
+	}
 }
 
 func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {
@@ -135,6 +187,31 @@ func (p *Player) updateLasers() {
 					Dot: Dot{
 						x: int(lootBox.x),
 						y: int(lootBox.y - lootBox.h/2),
+						color: color.RGBA{
+							R: 0xff,
+							G: 0xff,
+							B: 0xff,
+							A: 0xf0,
+						},
+						msg:      strconv.Itoa(-p.lasers[index].damage),
+						textFont: hitTextFont,
+					},
+					duration: 2 * framesPerSecond / 3,
+				})
+			}
+		}
+		for _, rubberDuck := range rubberDucks {
+			if !rubberDuck.dead && math.Abs(float64(p.lasers[index].y+p.lasers[index].speed*math.Sin(p.lasers[index].angle))-float64(rubberDuck.y)) < rubberDuck.h/2 && math.Abs(float64(p.lasers[index].x+p.lasers[index].speed*math.Cos(p.lasers[index].angle))-float64(rubberDuck.x)) < rubberDuck.w/2 {
+				damage := p.lasers[index].damage
+				if p.instaKill {
+					damage = rubberDuck.points
+				}
+				rubberDuck.points -= damage
+				hit = true
+				rubberDuck.hits = append(rubberDuck.hits, Hit{
+					Dot: Dot{
+						x: int(rubberDuck.x),
+						y: int(rubberDuck.y - rubberDuck.h/2),
 						color: color.RGBA{
 							R: 0xff,
 							G: 0xff,

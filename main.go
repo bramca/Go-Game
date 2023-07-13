@@ -57,6 +57,7 @@ var (
 		speed:        playerStartSpeed,
 		acceleration: playerStartAcceleration,
 		damage:       pointsPerHit,
+		gun: "Shotgun",
 	}
 	playerImage             *ebiten.Image
 	playerSkullImage        *ebiten.Image
@@ -71,6 +72,14 @@ var (
 	enemyLaserColor      = color.RGBA{R: 255, G: 0, B: 0, A: 255}
 	enemyHealthbarColors = []color.RGBA{{0, 255, 0, 240}, {255, 0, 0, 240}}
 	maxEnemies           = 5
+
+	rubberDuckImage *ebiten.Image
+	rubberDucks = []*RubberDuck{}
+	rubberDuckSpawnRate = 8 * framesPerSecond
+	rubberDuckStartPoints = 20
+	rubberDuckHealthBarColors = []color.RGBA{{0, 255, 0, 240}, {255, 0, 0, 240}}
+	maxRubberDucks = 2
+	rubberDuckRewards = []string{}
 
 	damageColor = color.RGBA{255, 255, 255, 240}
 
@@ -132,9 +141,11 @@ type Game struct {
 
 func (g *Game) initialize() {
 	lootRewards = []string{"Health", "Firerate", "Movement", "Damage", "Laser Speed", "Detect Boxes", "Invincible", "Insta Kill", "Vampire Mode"}
+	rubberDuckRewards = []string{"Shotgun"}
 	dots = []*Dot{}
 	enemies = []*Enemy{}
 	lootBoxes = []*LootBox{}
+	rubberDucks = []*RubberDuck{}
 	backgroundColor = color.RGBA{R: 8, G: 14, B: 44, A: 1}
 
 	player.img = playerImage
@@ -175,6 +186,8 @@ func (g *Game) initialize() {
 	// spawnEnemies()
 
 	spawnLootBoxes()
+
+	spawnRubberDucks()
 }
 
 // Update proceeds the game state.
@@ -246,8 +259,12 @@ func (g *Game) Update() error {
 			spawnDots(screenWidth*2, screenHeight*2)
 		}
 
-		if frameCount%enemySpawnRate == 0 {
-			spawnEnemies()
+		// if frameCount%enemySpawnRate == 0 {
+		// 	spawnEnemies()
+		// }
+
+		if frameCount%rubberDuckSpawnRate == 0 {
+			spawnRubberDucks()
 		}
 
 		if frameCount%lootBoxSpawnRate == 0 {
@@ -281,6 +298,16 @@ func (g *Game) Update() error {
 			}
 		}
 
+		// Update rubber ducks
+		for _, rubberDuck := range rubberDucks {
+			if !rubberDuck.dead {
+				rubberDuck.brain(dots, player)
+				rubberDuck.update()
+			} else if !rubberDuck.rewardGiven {
+				rubberDuck.giveReward()
+			}
+		}
+
 		// Update the player rotation based on the mouse position
 		player.update(float64(player.x-camX), float64(player.y-camY), dots)
 
@@ -300,19 +327,7 @@ func (g *Game) Update() error {
 		// if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) && !mouseButtonClicked {
 		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 			playerFireFrameCount += 1
-			if playerFireFrameCount%player.fireRate == 0 {
-				player.lasers = append(player.lasers, &Laser{
-					x:        player.x,
-					y:        player.y,
-					angle:    player.angle,
-					speed:    player.laserSpeed,
-					color:    playerLaserColor,
-					duration: laserDuration,
-					size:     laserSize,
-					damage:   player.damage,
-				})
-				playerFireFrameCount = 0
-			}
+			player.shoot()
 			// mouseButtonClicked = true
 		}
 
@@ -387,6 +402,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			if lootBoxes[index].hitpoints > 0 && !lootBoxes[index].broken && lootBoxes[index].duration > 0 {
 				lootBoxes[index].draw(screen, float64(lootBoxes[index].x-camX), float64(lootBoxes[index].y-camY))
 				lootBoxes[index].drawHits(screen)
+			}
+		}
+
+		for index := len(rubberDucks) - 1; index >= 0; index-- {
+			if rubberDucks[index].points > 0 && !rubberDucks[index].dead {
+				rubberDucks[index].draw(screen, float64(rubberDucks[index].x-camX), float64(rubberDucks[index].y-camY))
+				rubberDucks[index].drawHits(screen)
 			}
 		}
 
@@ -469,6 +491,31 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				lootBoxes = lootBoxes[:len(lootBoxes)-1]
 			}
 		}
+
+		for index := len(rubberDucks) - 1; index >= 0; index-- {
+			if rubberDucks[index].points > 0 && !rubberDucks[index].dead {
+				rubberDucks[index].draw(screen, float64(rubberDucks[index].x-camX), float64(rubberDucks[index].y-camY))
+				rubberDucks[index].drawHits(screen)
+			} else if !rubberDucks[index].dead {
+				rubberDucks[index].hits = append(rubberDucks[index].hits, Hit{
+					Dot: Dot{
+						x:        int(rubberDucks[index].x),
+						y:        int(rubberDucks[index].y - rubberDucks[index].h),
+						color:    lootBoxHitColor,
+						msg:      "+" + rubberDucks[index].reward,
+						textFont: hitTextFont,
+					},
+					duration: framesPerSecond,
+				})
+				rubberDucks[index].dead = true
+			} else if len(rubberDucks[index].hits) > 0 {
+				rubberDucks[index].drawHits(screen)
+			} else {
+				rubberDucks[index] = rubberDucks[len(rubberDucks)-1]
+				rubberDucks = rubberDucks[:len(rubberDucks)-1]
+			}
+		}
+
 
 		// Draw the lasers
 		player.drawLasers(screen, camX, camY)

@@ -104,6 +104,51 @@ func spawnEnemies() {
 	}
 }
 
+func spawnRubberDucks() {
+	for i:= len(rubberDucks); i < maxRubberDucks; i++ {
+		x := camX + float64(rand.Intn(screenWidth*6))
+		y := camY + float64(rand.Intn(screenHeight*6))
+		w := float64(rubberDuckImage.Bounds().Dx())
+		h := float64(rubberDuckImage.Bounds().Dy())
+		points := rubberDuckStartPoints + player.score/100
+		maxPoints := rubberDuckStartPoints + player.score/100
+		visibleRange := float64(int(math.Min(screenWidth, screenHeight))+rand.Intn(int(math.Max(screenWidth, screenHeight))-int(math.Min(screenWidth, screenHeight)))) / 4
+		rubberDucks = append(rubberDucks, &RubberDuck{
+			Player:             Player{
+				x:            x,
+				y:            y,
+				w:            w,
+				h:            h,
+				angle:        0,
+				lasers:       []*Laser{},
+				tempRewards:  []*TempReward{},
+				img:          rubberDuckImage,
+				ySpeed:       0,
+				xSpeed:       0,
+				points:       points,
+				maxPoints:    maxPoints,
+				healthBar:    HealthBar{
+					x:               x,
+					y:               y - h,
+					w:               w,
+					h:               healthBarSize,
+					points:          points,
+					maxPoints:       maxPoints,
+					healthBarColor:  rubberDuckHealthBarColors[0],
+					healthLostColor: rubberDuckHealthBarColors[1],
+					textFont:        healthBarFont,
+				},
+			},
+			visibleRange:       visibleRange,
+			fleeRange: 2*visibleRange,
+			dotTargetIndex:     -1,
+			speedMultiplyer:    (3 + rand.Intn(6)),
+			movementPrediction: float64(10 + rand.Intn(30)),
+			reward: rubberDuckRewards[rand.Intn(len(rubberDuckRewards))],
+		})
+	}
+}
+
 func spawnLootBoxes() {
 	for i := len(lootBoxes); i < maxLootBoxes; i++ {
 		x := camX + float64(rand.Intn(screenWidth*4))
@@ -153,6 +198,8 @@ func initialize() {
 	playerVampireImage, _, _ = ebitenutil.NewImageFromFile("./resources/gopher_vampire.png")
 
 	playerVampireSkullImage, _, _ = ebitenutil.NewImageFromFile("./resources/gopher_vampire_skull.png")
+
+	rubberDuckImage, _, _ = ebitenutil.NewImageFromFile("./resources/rubber_duck.png")
 
 	// Generate a set of random dots if the dots slice is empty
 	dpi := 72.0
