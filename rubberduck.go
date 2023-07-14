@@ -10,23 +10,28 @@ import (
 type RubberDuck struct {
 	Player
 	visibleRange       float64
-	fleeRange float64
+	fleeRange          float64
 	dotTargetIndex     int
 	hits               []Hit
 	speedMultiplyer    int
 	movementPrediction float64
-	reward string
-	rewardGiven bool
+	reward             string
+	rewardGiven        bool
 	dead               bool
-	fleeing bool
+	fleeing            bool
 }
 
 func (p *RubberDuck) giveReward() {
 	switch p.reward {
+	case "Exploding Lasers":
+		player.gun = "Exploding Lasers"
+	case "Double Lasers":
+		player.gun = "Double Lasers"
+	case "Piercing Lasers":
+		player.gun = "Piercing Lasers"
+	case "Homing Lasers":
+		player.gun = "Homing Lasers"
 	case "Shotgun":
-		if player.gun != "Shotgun" {
-			player.fireRate = player.fireRate / 2
-		}
 		player.gun = "Shotgun"
 	}
 	p.rewardGiven = true
@@ -101,9 +106,9 @@ func (p *RubberDuck) moveToTarget(dots []*Dot) {
 
 func (p *RubberDuck) moveAwayFromTarget(player *Player) {
 	if !p.fleeing || rand.Float64() < 0.05 {
-		min := -math.Pi/4
-		max := math.Pi/4
-		r := math.Pi + (min + rand.Float64() * (max - min))
+		min := -math.Pi / 4
+		max := math.Pi / 4
+		r := math.Pi + (min + rand.Float64()*(max-min))
 		p.angle = angleBetweenPoints(p.x, p.y, float64(player.x), float64(player.y)) + r
 	}
 	p.ySpeed = math.Sin(p.angle) * float64(p.speedMultiplyer)
@@ -126,4 +131,3 @@ func (p *RubberDuck) eatDots(dots []*Dot) {
 		}
 	}
 }
-

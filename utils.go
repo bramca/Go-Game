@@ -105,7 +105,7 @@ func spawnEnemies() {
 }
 
 func spawnRubberDucks() {
-	for i:= len(rubberDucks); i < maxRubberDucks; i++ {
+	for i := len(rubberDucks); i < maxRubberDucks; i++ {
 		x := camX + float64(rand.Intn(screenWidth*6))
 		y := camY + float64(rand.Intn(screenHeight*6))
 		w := float64(rubberDuckImage.Bounds().Dx())
@@ -114,20 +114,20 @@ func spawnRubberDucks() {
 		maxPoints := rubberDuckStartPoints + player.score/100
 		visibleRange := float64(int(math.Min(screenWidth, screenHeight))+rand.Intn(int(math.Max(screenWidth, screenHeight))-int(math.Min(screenWidth, screenHeight)))) / 4
 		rubberDucks = append(rubberDucks, &RubberDuck{
-			Player:             Player{
-				x:            x,
-				y:            y,
-				w:            w,
-				h:            h,
-				angle:        0,
-				lasers:       []*Laser{},
-				tempRewards:  []*TempReward{},
-				img:          rubberDuckImage,
-				ySpeed:       0,
-				xSpeed:       0,
-				points:       points,
-				maxPoints:    maxPoints,
-				healthBar:    HealthBar{
+			Player: Player{
+				x:           x,
+				y:           y,
+				w:           w,
+				h:           h,
+				angle:       0,
+				lasers:      []*Laser{},
+				tempRewards: []*TempReward{},
+				img:         rubberDuckImage,
+				ySpeed:      0,
+				xSpeed:      0,
+				points:      points,
+				maxPoints:   maxPoints,
+				healthBar: HealthBar{
 					x:               x,
 					y:               y - h,
 					w:               w,
@@ -140,11 +140,11 @@ func spawnRubberDucks() {
 				},
 			},
 			visibleRange:       visibleRange,
-			fleeRange: 2*visibleRange,
+			fleeRange:          2 * visibleRange,
 			dotTargetIndex:     -1,
 			speedMultiplyer:    (3 + rand.Intn(6)),
 			movementPrediction: float64(10 + rand.Intn(30)),
-			reward: rubberDuckRewards[rand.Intn(len(rubberDuckRewards))],
+			reward:             rubberDuckRewards[rand.Intn(len(rubberDuckRewards))],
 		})
 	}
 }

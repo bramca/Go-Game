@@ -37,14 +37,17 @@ var (
 
 	healthBarSize = 5.0
 
-	playerStartPoints     = 15
-	playerFriction        = 0.05
-	playerLaserColor      = color.RGBA{R: 183, G: 244, B: 216, A: 255}
-	scoreColor            = color.RGBA{R: 255, G: 255, B: 255, A: 240}
-	playerStartFireRate   = framesPerSecond / 3
-	playerFireFrameCount  = -1
-	playerHealthbarColors = []color.RGBA{{0, 255, 0, 240}, {255, 0, 0, 240}}
-	player                = &Player{
+	playerStartPoints         = 15
+	playerFriction            = 0.05
+	playerLaserColor          = color.RGBA{R: 183, G: 244, B: 216, A: 255}
+	playerHomingLaserColor    = color.RGBA{R: 191, G: 99, B: 255, A: 255}
+	playerPiercingLaserColor  = color.RGBA{R: 179, G: 255, B: 60, A: 255}
+	playerExplodingLaserColor = color.RGBA{R: 255, G: 112, B: 0, A: 255}
+	scoreColor                = color.RGBA{R: 255, G: 255, B: 255, A: 240}
+	playerStartFireRate       = framesPerSecond / 3
+	playerFireFrameCount      = -1
+	playerHealthbarColors     = []color.RGBA{{0, 255, 0, 240}, {255, 0, 0, 240}}
+	player                    = &Player{
 		x:            0,
 		y:            0,
 		w:            20,
@@ -57,7 +60,6 @@ var (
 		speed:        playerStartSpeed,
 		acceleration: playerStartAcceleration,
 		damage:       pointsPerHit,
-		gun: "Shotgun",
 	}
 	playerImage             *ebiten.Image
 	playerSkullImage        *ebiten.Image
@@ -73,13 +75,13 @@ var (
 	enemyHealthbarColors = []color.RGBA{{0, 255, 0, 240}, {255, 0, 0, 240}}
 	maxEnemies           = 5
 
-	rubberDuckImage *ebiten.Image
-	rubberDucks = []*RubberDuck{}
-	rubberDuckSpawnRate = 8 * framesPerSecond
-	rubberDuckStartPoints = 20
+	rubberDuckImage           *ebiten.Image
+	rubberDucks               = []*RubberDuck{}
+	rubberDuckSpawnRate       = 8 * framesPerSecond
+	rubberDuckStartPoints     = 20
 	rubberDuckHealthBarColors = []color.RGBA{{0, 255, 0, 240}, {255, 0, 0, 240}}
-	maxRubberDucks = 2
-	rubberDuckRewards = []string{}
+	maxRubberDucks            = 2
+	rubberDuckRewards         = []string{}
 
 	damageColor = color.RGBA{255, 255, 255, 240}
 
@@ -141,7 +143,7 @@ type Game struct {
 
 func (g *Game) initialize() {
 	lootRewards = []string{"Health", "Firerate", "Movement", "Damage", "Laser Speed", "Detect Boxes", "Invincible", "Insta Kill", "Vampire Mode"}
-	rubberDuckRewards = []string{"Shotgun"}
+	rubberDuckRewards = []string{"Shotgun", "Homing Lasers", "Piercing Lasers", "Double Lasers", "Exploding Lasers"}
 	dots = []*Dot{}
 	enemies = []*Enemy{}
 	lootBoxes = []*LootBox{}
@@ -259,9 +261,9 @@ func (g *Game) Update() error {
 			spawnDots(screenWidth*2, screenHeight*2)
 		}
 
-		// if frameCount%enemySpawnRate == 0 {
-		// 	spawnEnemies()
-		// }
+		if frameCount%enemySpawnRate == 0 {
+			spawnEnemies()
+		}
 
 		if frameCount%rubberDuckSpawnRate == 0 {
 			spawnRubberDucks()
@@ -516,7 +518,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 
-
 		// Draw the lasers
 		player.drawLasers(screen, camX, camY)
 
@@ -537,8 +538,8 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 // TODO: ideas
-// 1. rubber duck that runs away, multiple loot box rewards received
-// 2. add more temporary rewards
+// 1. add more temporary rewards
+// 2. add more interesting enemies
 func main() {
 	game := &Game{}
 	// Sepcify the window size as you like. Here, a doulbed size is specified.
