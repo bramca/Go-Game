@@ -25,14 +25,19 @@ func (p *RubberDuck) giveReward() {
 	switch p.reward {
 	case "Exploding Lasers":
 		player.gun = "Exploding Lasers"
+		player.ammo = 20
 	case "Double Lasers":
 		player.gun = "Double Lasers"
+		player.ammo = 70
 	case "Piercing Lasers":
 		player.gun = "Piercing Lasers"
+		player.ammo = 50
 	case "Homing Lasers":
 		player.gun = "Homing Lasers"
+		player.ammo = 100
 	case "Shotgun":
 		player.gun = "Shotgun"
+		player.ammo = 50
 	}
 	p.rewardGiven = true
 }

@@ -33,15 +33,22 @@ type Player struct {
 	acceleration float64
 	damage       int
 	gun          string
+	ammo         int
 }
 
 func (p *Player) shoot() {
 	// Adapt variables to weapon
 	var fireRate int
+	if p.ammo == 0 {
+		p.gun = playerDefaultGun
+		p.ammo = -1
+	}
 	switch p.gun {
 	case "Shotgun":
 		fireRate = p.fireRate * 3
 	case "Exploding Lasers":
+		fireRate = p.fireRate * 3
+	case "Piercing Lasers":
 		fireRate = p.fireRate * 2
 	default:
 		fireRate = p.fireRate
@@ -134,6 +141,9 @@ func (p *Player) shoot() {
 			})
 		}
 		playerFireFrameCount = 0
+		if p.ammo > 0 {
+			p.ammo -= 1
+		}
 	}
 }
 
@@ -190,6 +200,11 @@ func (p *Player) drawTempRewards(screen *ebiten.Image) {
 func (p *Player) drawStats(screen *ebiten.Image) {
 	text.Draw(screen, fmt.Sprintf("Score: %d", p.score), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
 	text.Draw(screen, fmt.Sprintf("\nGun: %s", p.gun), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+	if p.ammo >= 0 {
+		text.Draw(screen, fmt.Sprintf("\n\nAmmo: %d", p.ammo), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+	} else {
+		text.Draw(screen, "\n\nAmmo: Infinite", scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+	}
 }
 
 func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {

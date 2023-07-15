@@ -45,6 +45,7 @@ var (
 	playerExplodingLaserColor = color.RGBA{R: 255, G: 112, B: 0, A: 255}
 	scoreColor                = color.RGBA{R: 255, G: 255, B: 255, A: 240}
 	playerStartFireRate       = framesPerSecond / 3
+	playerDefaultGun          = "Default Laser"
 	playerFireFrameCount      = -1
 	playerHealthbarColors     = []color.RGBA{{0, 255, 0, 240}, {255, 0, 0, 240}}
 	player                    = &Player{
@@ -60,7 +61,8 @@ var (
 		speed:        playerStartSpeed,
 		acceleration: playerStartAcceleration,
 		damage:       pointsPerHit,
-		gun:          "Default Laser",
+		gun:          playerDefaultGun,
+		ammo:         -1,
 	}
 	playerImage             *ebiten.Image
 	playerSkullImage        *ebiten.Image
@@ -179,7 +181,8 @@ func (g *Game) initialize() {
 	player.instaKill = false
 	player.invincible = false
 	player.laserSpeed = laserSpeed
-	player.gun = "Default Laser"
+	player.gun = playerDefaultGun
+	player.ammo = -1
 
 	// Calculate the position of the screen center based on the player's position
 	camX = player.x + player.w/2 - screenWidth/2
