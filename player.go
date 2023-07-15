@@ -187,8 +187,9 @@ func (p *Player) drawTempRewards(screen *ebiten.Image) {
 	}
 }
 
-func (p *Player) drawScore(screen *ebiten.Image) {
+func (p *Player) drawStats(screen *ebiten.Image) {
 	text.Draw(screen, fmt.Sprintf("Score: %d", p.score), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+	text.Draw(screen, fmt.Sprintf("\nGun: %s", p.gun), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
 }
 
 func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {

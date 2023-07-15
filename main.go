@@ -60,6 +60,7 @@ var (
 		speed:        playerStartSpeed,
 		acceleration: playerStartAcceleration,
 		damage:       pointsPerHit,
+		gun:          "Default Laser",
 	}
 	playerImage             *ebiten.Image
 	playerSkullImage        *ebiten.Image
@@ -178,6 +179,7 @@ func (g *Game) initialize() {
 	player.instaKill = false
 	player.invincible = false
 	player.laserSpeed = laserSpeed
+	player.gun = "Default Laser"
 
 	// Calculate the position of the screen center based on the player's position
 	camX = player.x + player.w/2 - screenWidth/2
@@ -369,7 +371,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			x := (screenWidth - len(l)*fontSize) / 2
 			text.Draw(screen, l, arcadeFont, x, (i+4)*fontSize, color.White)
 		}
-		player.drawScore(screen)
+		player.drawStats(screen)
 		for index := len(dots) - 1; index >= 0; index-- {
 			if !dots[index].eaten {
 				dots[index].draw(screen, camX, camY)
@@ -418,7 +420,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		player.drawLasers(screen, camX, camY)
 
 		// Draw the player
-		player.drawScore(screen)
+		player.drawStats(screen)
 		player.draw(screen, float64(player.x-camX), float64(player.y-camY))
 		player.drawTempRewards(screen)
 
@@ -522,7 +524,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		player.drawLasers(screen, camX, camY)
 
 		// Draw the player
-		player.drawScore(screen)
+		player.drawStats(screen)
 		player.draw(screen, float64(player.x-camX), float64(player.y-camY))
 		player.drawTempRewards(screen)
 
