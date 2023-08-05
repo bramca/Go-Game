@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"math"
+	"math/rand"
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -31,6 +32,119 @@ type Player struct {
 	speed        float64
 	acceleration float64
 	damage       int
+	gun          string
+	ammo         int
+}
+
+func (p *Player) shoot() {
+	// Adapt variables to weapon
+	var fireRate int
+	if p.ammo == 0 {
+		p.gun = playerDefaultGun
+		p.ammo = -1
+	}
+	switch p.gun {
+	case "Shotgun":
+		fireRate = p.fireRate * 3
+	case "Exploding Lasers":
+		fireRate = p.fireRate * 3
+	case "Piercing Lasers":
+		fireRate = p.fireRate * 2
+	default:
+		fireRate = p.fireRate
+	}
+	if playerFireFrameCount%fireRate == 0 {
+		switch p.gun {
+		case "Exploding Lasers":
+			p.lasers = append(p.lasers, &Laser{
+				x:         p.x,
+				y:         p.y,
+				angle:     p.angle,
+				speed:     p.laserSpeed,
+				color:     playerExplodingLaserColor,
+				duration:  laserDuration,
+				size:      laserSize,
+				damage:    p.damage,
+				exploding: true,
+			})
+		case "Double Lasers":
+			laserDist := 10.0
+			p.lasers = append(p.lasers, &Laser{
+				x:        p.x + math.Sin(p.angle)*laserDist,
+				y:        p.y - math.Cos(p.angle)*laserDist,
+				angle:    p.angle,
+				speed:    p.laserSpeed,
+				color:    playerLaserColor,
+				duration: laserDuration,
+				size:     laserSize,
+				damage:   p.damage,
+			})
+			p.lasers = append(p.lasers, &Laser{
+				x:        p.x - math.Sin(p.angle)*laserDist,
+				y:        p.y + math.Cos(p.angle)*laserDist,
+				angle:    p.angle,
+				speed:    p.laserSpeed,
+				color:    playerLaserColor,
+				duration: laserDuration,
+				size:     laserSize,
+				damage:   p.damage,
+			})
+		case "Piercing Lasers":
+			p.lasers = append(p.lasers, &Laser{
+				x:        p.x,
+				y:        p.y,
+				angle:    p.angle,
+				speed:    p.laserSpeed,
+				color:    playerPiercingLaserColor,
+				duration: laserDuration,
+				size:     laserSize,
+				damage:   p.damage,
+				piercing: true,
+			})
+		case "Homing Lasers":
+			p.lasers = append(p.lasers, &Laser{
+				x:                 p.x,
+				y:                 p.y,
+				angle:             p.angle,
+				speed:             p.laserSpeed,
+				color:             playerHomingLaserColor,
+				duration:          laserDuration,
+				size:              laserSize,
+				damage:            p.damage,
+				homing:            true,
+				homingTargetIndex: -1,
+				homingRange:       float64(int(math.Min(screenWidth, screenHeight))+rand.Intn(int(math.Max(screenWidth, screenHeight))-int(math.Min(screenWidth, screenHeight)))) / 4,
+			})
+		case "Shotgun":
+			for i := -math.Pi / 12; i < math.Pi/12; i += math.Pi / 36 {
+				p.lasers = append(p.lasers, &Laser{
+					x:        p.x,
+					y:        p.y,
+					angle:    p.angle + i,
+					speed:    p.laserSpeed * (0.7 + rand.Float64()*0.3),
+					color:    playerLaserColor,
+					duration: laserDuration,
+					size:     laserSize,
+					damage:   p.damage,
+				})
+			}
+		default:
+			p.lasers = append(p.lasers, &Laser{
+				x:        p.x,
+				y:        p.y,
+				angle:    p.angle,
+				speed:    p.laserSpeed,
+				color:    playerLaserColor,
+				duration: laserDuration,
+				size:     laserSize,
+				damage:   p.damage,
+			})
+		}
+		playerFireFrameCount = 0
+		if p.ammo > 0 {
+			p.ammo -= 1
+		}
+	}
 }
 
 func (p *Player) update(x, y float64, dots []*Dot) {
@@ -83,8 +197,14 @@ func (p *Player) drawTempRewards(screen *ebiten.Image) {
 	}
 }
 
-func (p *Player) drawScore(screen *ebiten.Image) {
+func (p *Player) drawStats(screen *ebiten.Image) {
 	text.Draw(screen, fmt.Sprintf("Score: %d", p.score), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+	text.Draw(screen, fmt.Sprintf("\nGun: %s", p.gun), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+	if p.ammo >= 0 {
+		text.Draw(screen, fmt.Sprintf("\n\nAmmo: %d", p.ammo), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+	} else {
+		text.Draw(screen, "\n\nAmmo: Infinite", scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+	}
 }
 
 func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {
@@ -148,7 +268,46 @@ func (p *Player) updateLasers() {
 				})
 			}
 		}
-		if hit {
+		for _, rubberDuck := range rubberDucks {
+			if !rubberDuck.dead && math.Abs(float64(p.lasers[index].y+p.lasers[index].speed*math.Sin(p.lasers[index].angle))-float64(rubberDuck.y)) < rubberDuck.h/2 && math.Abs(float64(p.lasers[index].x+p.lasers[index].speed*math.Cos(p.lasers[index].angle))-float64(rubberDuck.x)) < rubberDuck.w/2 {
+				damage := p.lasers[index].damage
+				if p.instaKill {
+					damage = rubberDuck.points
+				}
+				rubberDuck.points -= damage
+				hit = true
+				rubberDuck.hits = append(rubberDuck.hits, Hit{
+					Dot: Dot{
+						x: int(rubberDuck.x),
+						y: int(rubberDuck.y - rubberDuck.h/2),
+						color: color.RGBA{
+							R: 0xff,
+							G: 0xff,
+							B: 0xff,
+							A: 0xf0,
+						},
+						msg:      strconv.Itoa(-p.lasers[index].damage),
+						textFont: hitTextFont,
+					},
+					duration: 2 * framesPerSecond / 3,
+				})
+			}
+		}
+		if hit && !p.lasers[index].piercing {
+			if p.lasers[index].exploding {
+				for i := 0.0; i < 2*math.Pi; i += math.Pi / 24 {
+					p.lasers = append(p.lasers, &Laser{
+						x:        p.lasers[index].x,
+						y:        p.lasers[index].y,
+						angle:    p.angle + i,
+						speed:    p.laserSpeed * (0.7 + rand.Float64()*0.3),
+						color:    playerExplodingLaserColor,
+						duration: laserDuration,
+						size:     laserSize,
+						damage:   p.damage / 2,
+					})
+				}
+			}
 			p.lasers[index] = p.lasers[len(p.lasers)-1]
 			p.lasers = p.lasers[:len(p.lasers)-1]
 			continue
