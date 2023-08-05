@@ -6,20 +6,20 @@ Inspired by [Risk of Rain](https://en.wikipedia.org/wiki/Risk_of_Rain).<br>
 Using the [ebiten](https://github.com/hajimehoshi/ebiten) engine for the game objects and the game rendering. <br>
 
 # How to run
-You can run this game by building the go app `go build .` or run the go app directly `go run .`
+You can run this game by building the go app `go build . ; ./game` or run the go app directly `go run .`
 
 # Controls
-`mouse right` hold it to shoot the laser beam.<br>
-`w/z` hold to thrust forward.<br>
-`a/q` turn the ship left.<br>
-`s` hold to thrust backward.<br>
-`d` turn the ship right.<br>
+`mouse right` hold it to shoot your gun.<br>
+`w/z` hold to thrust up.<br>
+`a/q` hold to thrust left.<br>
+`s` hold to thrust down.<br>
+`d` hold to thrust right.<br>
 `p` pause the game.
 
 # Special enemies
-![other lang](./resources/rust.png) other programming languages are the main enemies.<br>
-![github](./resources/github.png) lootbox with random powerup.<br>
-![rubber duck](./resources/rubber_duck.png) a rubber duck carrying a random gun.<br>
+- ![rust](./resources/rust.png)![cpp](./resources/cpp.png)![csharp](./resources/csharp.png)![haskell](./resources/haskell.png)![java](./resources/java.png)![javascript](./resources/javascript.png)![python](./resources/python.png) <br> other programming languages are the main enemies.<br>
+- ![github](./resources/github.png) lootbox with random powerup.<br> 
+- ![rubber duck](./resources/rubber_duck.png) a rubber duck carrying a random gun.<br>
 
 # Permanent Powerups
 - *Health* heal or increase health.<br>
