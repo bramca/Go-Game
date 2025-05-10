@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"golang.org/x/image/font"
 )
 
@@ -26,6 +26,11 @@ const (
 )
 
 var (
+	titleTexts      = []string{"GO FOREVER"}
+	titleTextsExtra = []string{"", "", "", "", "", "", "", "PRESS SPACE KEY"}
+	gameOverTexts   = []string{"", "GAME OVER!", "", "", "PRESS SPACE KEY"}
+	pauseTexts      = []string{"", "PAUSED", "", "", "PRESS SPACE KEY"}
+
 	playerStartSpeed        = 6.0
 	playerStartAcceleration = 0.2
 	pointsPerHit            = 2
@@ -36,6 +41,16 @@ var (
 	camY = 0.0
 
 	healthBarSize = 5.0
+
+	// text geo matrices
+	scoreGeoMatrix      ebiten.GeoM
+	titleGeoMatrix      ebiten.GeoM
+	titleExtraGeoMatrix ebiten.GeoM
+	gameOverGeoMatrix   ebiten.GeoM
+	pauseGeoMatrix      ebiten.GeoM
+
+	// text colorscales
+	scoreColorScale = ebiten.ColorScale{}
 
 	playerStartPoints         = 15
 	playerFriction            = 0.05
@@ -123,8 +138,9 @@ var (
 
 	healthBarFontColor = color.RGBA{255, 255, 255, 240}
 
-	fontSize      = 24
-	titleFontSize = 36
+	fontSize            = 24
+	titleFontSize       = 36
+	titleFontColorScale = ebiten.ColorScale{}
 
 	hitFontSize       = 10
 	scoreFontSize     = 14
@@ -137,6 +153,13 @@ var (
 	recticle = Recticle{
 		size: 6,
 	}
+
+	// draw options
+	titleDrawOptions          *text.DrawOptions
+	scoreDrawOptions          *text.DrawOptions
+	titleTextExtraDrawOptions *text.DrawOptions
+	gameOverDrawOptions       *text.DrawOptions
+	pauseDrawOptions          *text.DrawOptions
 )
 
 // Game implements ebiten.Game interface.
@@ -151,7 +174,70 @@ func (g *Game) initialize() {
 	enemies = []*Enemy{}
 	lootBoxes = []*LootBox{}
 	rubberDucks = []*RubberDuck{}
+
+	// place text
+	scoreGeoMatrix = ebiten.GeoM{}
+	titleGeoMatrix = ebiten.GeoM{}
+	gameOverGeoMatrix = ebiten.GeoM{}
+	pauseGeoMatrix = ebiten.GeoM{}
+
+	scoreGeoMatrix.Translate(float64(scoreFontSize), float64(scoreFontSize+10))
+
+	for i, l := range titleTexts {
+		x := (screenWidth - len(l)*titleFontSize) / 2
+		titleGeoMatrix.Translate(float64(x), float64((i+4)*titleFontSize))
+	}
+
+	for i, l := range titleTextsExtra {
+		x := (screenWidth - len(l)*fontSize) / 2
+		titleExtraGeoMatrix.Translate(float64(x), float64((i+4)*fontSize))
+	}
+
+	for i, l := range gameOverTexts {
+		x := (screenWidth - len(l)*fontSize) / 2
+		gameOverGeoMatrix.Translate(float64(x), float64((i+4)*fontSize))
+	}
+
+	for i, l := range pauseTexts {
+		x := (screenWidth - len(l)*fontSize) / 2
+		pauseGeoMatrix.Translate(float64(x), float64((i+4)*fontSize))
+	}
+
+	// set text draw options
+	titleDrawOptions = &text.DrawOptions{
+		DrawImageOptions: ebiten.DrawImageOptions{
+			GeoM:       titleGeoMatrix,
+			ColorScale: titleFontColorScale,
+		},
+	}
+	scoreDrawOptions = &text.DrawOptions{
+		DrawImageOptions: ebiten.DrawImageOptions{
+			GeoM:       scoreGeoMatrix,
+			ColorScale: scoreColorScale,
+		},
+	}
+	titleTextExtraDrawOptions = &text.DrawOptions{
+		DrawImageOptions: ebiten.DrawImageOptions{
+			GeoM:       titleExtraGeoMatrix,
+			ColorScale: titleFontColorScale,
+		},
+	}
+	gameOverDrawOptions = &text.DrawOptions{
+		DrawImageOptions: ebiten.DrawImageOptions{
+			GeoM:       gameOverGeoMatrix,
+			ColorScale: titleFontColorScale,
+		},
+	}
+	pauseDrawOptions = &text.DrawOptions{
+		DrawImageOptions: ebiten.DrawImageOptions{
+			GeoM:       pauseGeoMatrix,
+			ColorScale: titleFontColorScale,
+		},
+	}
+
+	// colors
 	backgroundColor = color.RGBA{R: 8, G: 14, B: 44, A: 1}
+	scoreColorScale.ScaleWithColor(scoreColor)
 
 	player.img = playerImage
 	player.w = float64(playerImage.Bounds().Dx())
@@ -352,27 +438,24 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(backgroundColor)
 	switch g.mode {
 	case ModeTitle:
-		titleTexts := []string{"GO FOREVER"}
-		texts := []string{"", "", "", "", "", "", "", "PRESS SPACE KEY"}
-
-		for i, l := range titleTexts {
-			x := (screenWidth - len(l)*titleFontSize) / 2
-			text.Draw(screen, l, titleArcadeFont, x, (i+4)*titleFontSize, color.White)
+		for _, l := range titleTexts {
+			if l != "" {
+				text.Draw(screen, l, text.NewGoXFace(titleArcadeFont), titleDrawOptions)
+			}
 		}
 
-		for i, l := range texts {
-			x := (screenWidth - len(l)*fontSize) / 2
-			text.Draw(screen, l, arcadeFont, x, (i+4)*fontSize, color.White)
+		for _, l := range titleTextsExtra {
+			if l != "" {
+				text.Draw(screen, l, text.NewGoXFace(arcadeFont), titleTextExtraDrawOptions)
+			}
 		}
 		for index := len(dots) - 1; index >= 0; index-- {
 			dots[index].draw(screen, camX, camY)
 		}
 		recticle.draw(screen)
 	case ModeGameOver:
-		texts := []string{"", "GAME OVER!", "", "", "PRESS SPACE KEY"}
-		for i, l := range texts {
-			x := (screenWidth - len(l)*fontSize) / 2
-			text.Draw(screen, l, arcadeFont, x, (i+4)*fontSize, color.White)
+		for _, l := range gameOverTexts {
+			text.Draw(screen, l, text.NewGoXFace(arcadeFont), gameOverDrawOptions)
 		}
 		player.drawStats(screen)
 		for index := len(dots) - 1; index >= 0; index-- {
@@ -382,10 +465,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 		recticle.draw(screen)
 	case ModePause:
-		texts := []string{"", "PAUSED", "", "", "PRESS SPACE KEY"}
-		for i, l := range texts {
-			x := (screenWidth - len(l)*fontSize) / 2
-			text.Draw(screen, l, arcadeFont, x, (i+4)*fontSize, color.White)
+		for _, l := range pauseTexts {
+			if l != "" {
+				text.Draw(screen, l, text.NewGoXFace(arcadeFont), pauseDrawOptions)
+			}
 		}
 		// Draw the dots at their current position relative to the camera
 		for index := len(dots) - 1; index >= 0; index-- {

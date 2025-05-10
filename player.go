@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 type Player struct {
@@ -198,12 +198,12 @@ func (p *Player) drawTempRewards(screen *ebiten.Image) {
 }
 
 func (p *Player) drawStats(screen *ebiten.Image) {
-	text.Draw(screen, fmt.Sprintf("Score: %d", p.score), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
-	text.Draw(screen, fmt.Sprintf("\nGun: %s", p.gun), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+	text.Draw(screen, fmt.Sprintf("Score: %d", p.score), text.NewGoXFace(scoreTextFont), scoreDrawOptions)
+	text.Draw(screen, fmt.Sprintf("\nGun: %s", p.gun), text.NewGoXFace(scoreTextFont), scoreDrawOptions)
 	if p.ammo >= 0 {
-		text.Draw(screen, fmt.Sprintf("\n\nAmmo: %d", p.ammo), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+		text.Draw(screen, fmt.Sprintf("\n\nAmmo: %d", p.ammo), text.NewGoXFace(scoreTextFont), scoreDrawOptions)
 	} else {
-		text.Draw(screen, "\n\nAmmo: Infinite", scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+		text.Draw(screen, "\n\nAmmo: Infinite", text.NewGoXFace(scoreTextFont), scoreDrawOptions)
 	}
 }
 

@@ -234,6 +234,8 @@ func initialize() {
 		DPI:     dpi,
 		Hinting: font.HintingFull,
 	})
+
+	titleFontColorScale.ScaleWithColor(color.White)
 }
 
 func activateTempReward(lootReward string, duration int) {
