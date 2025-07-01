@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 	"math"
@@ -27,9 +28,9 @@ const (
 
 var (
 	titleTexts      = []string{"GO FOREVER"}
-	titleTextsExtra = []string{"", "", "", "", "", "", "", "PRESS SPACE KEY"}
-	gameOverTexts   = []string{"", "GAME OVER!", "", "", "PRESS SPACE KEY"}
-	pauseTexts      = []string{"", "PAUSED", "", "", "PRESS SPACE KEY"}
+	titleTextsExtra = []string{"PRESS SPACE KEY"}
+	gameOverTexts   = []string{"GAME OVER!", "PRESS SPACE KEY"}
+	pauseTexts      = []string{"PAUSED", "PRESS SPACE KEY"}
 
 	playerStartSpeed        = 6.0
 	playerStartAcceleration = 0.2
@@ -48,6 +49,9 @@ var (
 	titleExtraGeoMatrix ebiten.GeoM
 	gameOverGeoMatrix   ebiten.GeoM
 	pauseGeoMatrix      ebiten.GeoM
+
+	// text padding
+	newlinePadding = 20
 
 	// text colorscales
 	scoreColorScale = ebiten.ColorScale{}
@@ -178,30 +182,15 @@ func (g *Game) initialize() {
 	// place text
 	scoreGeoMatrix = ebiten.GeoM{}
 	titleGeoMatrix = ebiten.GeoM{}
+	titleExtraGeoMatrix = ebiten.GeoM{}
 	gameOverGeoMatrix = ebiten.GeoM{}
 	pauseGeoMatrix = ebiten.GeoM{}
 
 	scoreGeoMatrix.Translate(float64(scoreFontSize), float64(scoreFontSize+10))
-
-	for i, l := range titleTexts {
-		x := (screenWidth - len(l)*titleFontSize) / 2
-		titleGeoMatrix.Translate(float64(x), float64((i+4)*titleFontSize))
-	}
-
-	for i, l := range titleTextsExtra {
-		x := (screenWidth - len(l)*fontSize) / 2
-		titleExtraGeoMatrix.Translate(float64(x), float64((i+4)*fontSize))
-	}
-
-	for i, l := range gameOverTexts {
-		x := (screenWidth - len(l)*fontSize) / 2
-		gameOverGeoMatrix.Translate(float64(x), float64((i+4)*fontSize))
-	}
-
-	for i, l := range pauseTexts {
-		x := (screenWidth - len(l)*fontSize) / 2
-		pauseGeoMatrix.Translate(float64(x), float64((i+4)*fontSize))
-	}
+	titleGeoMatrix.Translate(float64(screenWidth-len(titleTexts[0])*titleFontSize)/2, float64(4*titleFontSize))
+	titleExtraGeoMatrix.Translate(float64(screenWidth-len(titleTextsExtra[0])*fontSize)/2, float64(10*fontSize))
+	gameOverGeoMatrix.Translate(float64(screenWidth-len(gameOverTexts[0])*fontSize)/2, float64(8*fontSize))
+	pauseGeoMatrix.Translate(float64((screenWidth-len(pauseTexts[0])*fontSize)/2), float64(8*fontSize))
 
 	// set text draw options
 	titleDrawOptions = &text.DrawOptions{
@@ -238,6 +227,17 @@ func (g *Game) initialize() {
 	// colors
 	backgroundColor = color.RGBA{R: 8, G: 14, B: 44, A: 1}
 	scoreColorScale.ScaleWithColor(scoreColor)
+
+	// scoreGeoMatrix = ebiten.GeoM{}
+	// titleGeoMatrix = ebiten.GeoM{}
+	// gameOverGeoMatrix = ebiten.GeoM{}
+	// pauseGeoMatrix = ebiten.GeoM{}
+	fmt.Printf("[DEBUG] screenWidth: %d, screenHeight: %d\n", screenWidth, screenHeight)
+	fmt.Printf("[DEBUG] scoreGeoMatrix: %+v\n", scoreGeoMatrix)
+	fmt.Printf("[DEBUG] titleGeoMatrix: %+v\n", titleGeoMatrix)
+	fmt.Printf("[DEBUG] titleExtraGeoMatrix: %+v\n", titleExtraGeoMatrix)
+	fmt.Printf("[DEBUG] gameOverGeoMatrix: %+v\n", gameOverGeoMatrix)
+	fmt.Printf("[DEBUG] pauseGeoMatrix: %+v\n", pauseGeoMatrix)
 
 	player.img = playerImage
 	player.w = float64(playerImage.Bounds().Dx())
@@ -438,25 +438,41 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(backgroundColor)
 	switch g.mode {
 	case ModeTitle:
-		for _, l := range titleTexts {
-			if l != "" {
-				text.Draw(screen, l, text.NewGoXFace(titleArcadeFont), titleDrawOptions)
+		for i, l := range titleTexts {
+			tx := 0
+			if i-1 > -1 {
+				tx = (len(titleTexts[i-1]) - len(l)) * titleFontSize
 			}
+			titleDrawOptions.DrawImageOptions.GeoM.Translate(float64(tx), float64(i+titleFontSize+newlinePadding))
+			text.Draw(screen, l, text.NewGoXFace(titleArcadeFont), titleDrawOptions)
 		}
+		titleDrawOptions.DrawImageOptions.GeoM = titleGeoMatrix
 
-		for _, l := range titleTextsExtra {
-			if l != "" {
-				text.Draw(screen, l, text.NewGoXFace(arcadeFont), titleTextExtraDrawOptions)
+		for i, l := range titleTextsExtra {
+			tx := 0
+			if i-1 > -1 {
+				tx = (len(titleTexts[i-1]) - len(l)) * fontSize
 			}
+			titleTextExtraDrawOptions.DrawImageOptions.GeoM.Translate(float64(tx), float64(i+fontSize+newlinePadding))
+			text.Draw(screen, l, text.NewGoXFace(arcadeFont), titleTextExtraDrawOptions)
 		}
+		titleTextExtraDrawOptions.DrawImageOptions.GeoM = titleExtraGeoMatrix
+
 		for index := len(dots) - 1; index >= 0; index-- {
 			dots[index].draw(screen, camX, camY)
 		}
 		recticle.draw(screen)
 	case ModeGameOver:
-		for _, l := range gameOverTexts {
+		for i, l := range gameOverTexts {
+			tx := 0
+			if i-1 > -1 {
+				tx = (len(titleTexts[i-1]) - len(l)) * fontSize
+			}
+			gameOverDrawOptions.DrawImageOptions.GeoM.Translate(float64(tx), float64(i+fontSize+newlinePadding))
 			text.Draw(screen, l, text.NewGoXFace(arcadeFont), gameOverDrawOptions)
 		}
+		gameOverDrawOptions.DrawImageOptions.GeoM = gameOverGeoMatrix
+
 		player.drawStats(screen)
 		for index := len(dots) - 1; index >= 0; index-- {
 			if !dots[index].eaten {
@@ -465,11 +481,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 		recticle.draw(screen)
 	case ModePause:
-		for _, l := range pauseTexts {
-			if l != "" {
-				text.Draw(screen, l, text.NewGoXFace(arcadeFont), pauseDrawOptions)
+		for i, l := range pauseTexts {
+			tx := 0
+			if i-1 > -1 {
+				tx = (len(titleTexts[i-1]) - len(l)) * fontSize
 			}
+			pauseDrawOptions.DrawImageOptions.GeoM.Translate(float64(tx), float64(i+fontSize+newlinePadding))
+			text.Draw(screen, l, text.NewGoXFace(arcadeFont), pauseDrawOptions)
 		}
+		pauseDrawOptions.DrawImageOptions.GeoM = pauseGeoMatrix
+
 		// Draw the dots at their current position relative to the camera
 		for index := len(dots) - 1; index >= 0; index-- {
 			if !dots[index].eaten && dots[index].duration > 0 {
