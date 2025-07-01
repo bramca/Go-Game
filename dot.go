@@ -4,18 +4,18 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text"
-	"golang.org/x/image/font"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 type Dot struct {
-	x, y     int
-	color    color.RGBA
-	msg      string
-	textFont font.Face
-	hits     []Hit
-	eaten    bool
-	duration int
+	x, y        int
+	color       color.RGBA
+	msg         string
+	textFont    *text.GoXFace
+	drawOptions *text.DrawOptions
+	hits        []Hit
+	eaten       bool
+	duration    int
 }
 
 func (d *Dot) update() {
@@ -35,5 +35,7 @@ func (d *Dot) drawHits(screen *ebiten.Image, camX float64, camY float64) {
 }
 
 func (d *Dot) draw(screen *ebiten.Image, camX float64, camY float64) {
-	text.Draw(screen, d.msg, d.textFont, d.x-int(camX), d.y-int(camY), d.color)
+	d.drawOptions.DrawImageOptions.GeoM.Translate(float64(d.x-int(camX)), float64(d.y-int(camY)))
+	text.Draw(screen, d.msg, d.textFont, d.drawOptions)
+	d.drawOptions.DrawImageOptions.GeoM.Reset()
 }
