@@ -491,6 +491,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		// Draw the enemies
 		for index := len(enemies) - 1; index >= 0; index-- {
+			if (((enemies[index].x-camX) < 0 || (enemies[index].x-camX) > screenWidth) &&
+				((enemies[index].y-camY) < 0 || (enemies[index].y-camY) > screenHeight)) {
+				continue
+			}
 			if enemies[index].points > 0 && !enemies[index].dead {
 				enemies[index].draw(screen, float64(enemies[index].x-camX), float64(enemies[index].y-camY))
 				enemies[index].drawHits(screen)
@@ -541,6 +545,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		// Draw the enemies
 		for index := len(enemies) - 1; index >= 0; index-- {
+			if (((enemies[index].x-camX) < 0 || (enemies[index].x-camX) > screenWidth) &&
+				((enemies[index].y-camY) < 0 || (enemies[index].y-camY) > screenHeight)) {
+				continue
+			}
 			if enemies[index].points > 0 && !enemies[index].dead {
 				enemies[index].draw(screen, float64(enemies[index].x-camX), float64(enemies[index].y-camY))
 				enemies[index].drawHits(screen)
