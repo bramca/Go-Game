@@ -29,7 +29,8 @@ func (l *Laser) update() {
 		if l.homingTargetIndex < 0 && len(enemies) > 0 && len(rubberDucks) > 0 {
 			l.searchEnemy()
 		}
-		if l.homingTargetType == "Enemy" {
+		switch l.homingTargetType {
+		case "Enemy":
 			if l.homingTargetIndex < 0 || l.homingTargetIndex > len(enemies)-1 {
 				l.searchEnemy()
 			}
@@ -38,7 +39,7 @@ func (l *Laser) update() {
 			} else {
 				l.searchEnemy()
 			}
-		} else if l.homingTargetType == "RubberDuck" {
+		case "RubberDuck":
 			if l.homingTargetIndex < 0 || l.homingTargetIndex > len(rubberDucks)-1 {
 				l.searchEnemy()
 			}
