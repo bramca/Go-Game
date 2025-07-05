@@ -23,18 +23,18 @@ type HealthBar struct {
 func (h *HealthBar) setDrawOptions() {
 	h.drawOptions = &text.DrawOptions{}
 	healthBarMsg := fmt.Sprintf("%d/%d", h.points, h.maxPoints)
-	h.drawOptions.DrawImageOptions.GeoM.Translate(float64(h.x+h.w/2)-float64(len(healthBarMsg)*healthBarFontSize/2), float64(h.y))
-	h.drawOptions.DrawImageOptions.ColorScale.SetR(float32(healthBarFontColor.R) / 256.0)
-	h.drawOptions.DrawImageOptions.ColorScale.SetG(float32(healthBarFontColor.G) / 256.0)
-	h.drawOptions.DrawImageOptions.ColorScale.SetB(float32(healthBarFontColor.B) / 256.0)
-	h.drawOptions.DrawImageOptions.ColorScale.SetA(float32(healthBarFontColor.A) / 256.0)
+	h.drawOptions.GeoM.Translate(float64(h.x+h.w/2)-float64(len(healthBarMsg)*healthBarFontSize/2), float64(h.y))
+	h.drawOptions.ColorScale.SetR(float32(healthBarFontColor.R) / 256.0)
+	h.drawOptions.ColorScale.SetG(float32(healthBarFontColor.G) / 256.0)
+	h.drawOptions.ColorScale.SetB(float32(healthBarFontColor.B) / 256.0)
+	h.drawOptions.ColorScale.SetA(float32(healthBarFontColor.A) / 256.0)
 }
 
 func (h *HealthBar) update(x, y float64, points, maxPoints int) {
 	h.x, h.y = x, y
 	healthBarMsg := fmt.Sprintf("%d/%d", h.points, h.maxPoints)
-	h.drawOptions.DrawImageOptions.GeoM.Reset()
-	h.drawOptions.DrawImageOptions.GeoM.Translate(float64(h.x+h.w/2)-float64(len(healthBarMsg)*healthBarFontSize/2), float64(h.y))
+	h.drawOptions.GeoM.Reset()
+	h.drawOptions.GeoM.Translate(float64(h.x+h.w/2)-float64(len(healthBarMsg)*healthBarFontSize/2), float64(h.y))
 	h.points, h.maxPoints = points, maxPoints
 }
 

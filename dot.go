@@ -35,7 +35,7 @@ func (d *Dot) drawHits(screen *ebiten.Image, camX float64, camY float64) {
 }
 
 func (d *Dot) draw(screen *ebiten.Image, camX float64, camY float64) {
-	d.drawOptions.DrawImageOptions.GeoM.Translate(float64(d.x-int(camX)), float64(d.y-int(camY)))
+	d.drawOptions.GeoM.Translate(float64(d.x-int(camX)), float64(d.y-int(camY)))
 	text.Draw(screen, d.msg, d.textFont, d.drawOptions)
-	d.drawOptions.DrawImageOptions.GeoM.Reset()
+	d.drawOptions.GeoM.Reset()
 }

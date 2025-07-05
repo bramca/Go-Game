@@ -20,7 +20,7 @@ func angleBetweenPoints(x1, y1, x2, y2 float64) float64 {
 }
 
 func distanceBetweenPoints(x1, y1, x2, y2 float64) float64 {
-	return math.Sqrt(math.Pow(x2-x1, 2) + math.Pow(y2-y1, 2))
+	return math.Sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
 }
 
 func randomHex(n int) (string, error) {
@@ -35,20 +35,17 @@ func setDotDrawOptions(d *Dot) {
 	drawOptions := text.DrawOptions{
 		DrawImageOptions: ebiten.DrawImageOptions{},
 	}
-	// drawOptions.DrawImageOptions.GeoM.Translate(float64(d.x), float64(d.y))
-	drawOptions.DrawImageOptions.ColorScale.SetR(float32(d.color.R) / 256.0)
-	drawOptions.DrawImageOptions.ColorScale.SetG(float32(d.color.G) / 256.0)
-	drawOptions.DrawImageOptions.ColorScale.SetB(float32(d.color.B) / 256.0)
-	drawOptions.DrawImageOptions.ColorScale.SetA(float32(d.color.G) / 256.0)
+	drawOptions.ColorScale.SetR(float32(d.color.R) / 256.0)
+	drawOptions.ColorScale.SetG(float32(d.color.G) / 256.0)
+	drawOptions.ColorScale.SetB(float32(d.color.B) / 256.0)
+	drawOptions.ColorScale.SetA(float32(d.color.G) / 256.0)
 	d.drawOptions = &drawOptions
 }
 
 func spawnDots(xBound, yBound int) {
-	for i := 0; i < dotSpawnCount; i++ {
+	for range dotSpawnCount {
 		x := int(camX + float64(rand.Intn(xBound)))
 		y := int(camY + float64(rand.Intn(yBound)))
-		// x := int(camX + float64(rand.Intn(screenWidth)))
-		// y := int(camY + float64(rand.Intn(screenHeight)))
 		msg, _ := randomHex(4)
 		dot := &Dot{
 			x: x,

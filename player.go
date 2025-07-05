@@ -201,15 +201,15 @@ func (p *Player) drawTempRewards(screen *ebiten.Image) {
 
 func (p *Player) drawStats(screen *ebiten.Image) {
 	text.Draw(screen, fmt.Sprintf("Score: %d", p.score), text.NewGoXFace(scoreTextFont), scoreDrawOptions)
-	scoreDrawOptions.DrawImageOptions.GeoM.Translate(0, float64(newlinePadding))
+	scoreDrawOptions.GeoM.Translate(0, float64(newlinePadding))
 	text.Draw(screen, fmt.Sprintf("Gun: %s", p.gun), text.NewGoXFace(scoreTextFont), scoreDrawOptions)
-	scoreDrawOptions.DrawImageOptions.GeoM.Translate(0, float64(newlinePadding))
+	scoreDrawOptions.GeoM.Translate(0, float64(newlinePadding))
 	if p.ammo >= 0 {
 		text.Draw(screen, fmt.Sprintf("Ammo: %d", p.ammo), text.NewGoXFace(scoreTextFont), scoreDrawOptions)
 	} else {
 		text.Draw(screen, "Ammo: Infinite", text.NewGoXFace(scoreTextFont), scoreDrawOptions)
 	}
-	scoreDrawOptions.DrawImageOptions.GeoM = scoreGeoMatrix
+	scoreDrawOptions.GeoM = scoreGeoMatrix
 }
 
 func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {

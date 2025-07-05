@@ -265,8 +265,6 @@ func (g *Game) initialize() {
 
 	spawnDots(screenWidth, screenHeight)
 
-	// spawnEnemies()
-
 	spawnLootBoxes()
 
 	spawnRubberDucks()
@@ -298,7 +296,7 @@ func (g *Game) Update() error {
 		frameCount += 1
 
 		keyPressed := false
-		if math.Sqrt(math.Pow(player.xSpeed, 2)+math.Pow(player.ySpeed, 2)) < player.speed {
+		if math.Sqrt(player.xSpeed*player.xSpeed+player.ySpeed*player.ySpeed) < player.speed {
 			if ebiten.IsKeyPressed(ebiten.KeyDown) || ebiten.IsKeyPressed(ebiten.KeyS) {
 				player.ySpeed += player.acceleration
 				keyPressed = true
@@ -432,20 +430,20 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			if i-1 > -1 {
 				tx = (len(titleTexts[i-1]) - len(l)) * titleFontSize
 			}
-			titleDrawOptions.DrawImageOptions.GeoM.Translate(float64(tx), float64(i+titleFontSize+newlinePadding))
+			titleDrawOptions.GeoM.Translate(float64(tx), float64(i+titleFontSize+newlinePadding))
 			text.Draw(screen, l, text.NewGoXFace(titleArcadeFont), titleDrawOptions)
 		}
-		titleDrawOptions.DrawImageOptions.GeoM = titleGeoMatrix
+		titleDrawOptions.GeoM = titleGeoMatrix
 
 		for i, l := range titleTextsExtra {
 			tx := 0
 			if i-1 > -1 {
 				tx = ((len(titleTexts[i-1]) - len(l)) * fontSize) / 2
 			}
-			titleTextExtraDrawOptions.DrawImageOptions.GeoM.Translate(float64(tx), float64(i+fontSize+newlinePadding))
+			titleTextExtraDrawOptions.GeoM.Translate(float64(tx), float64(i+fontSize+newlinePadding))
 			text.Draw(screen, l, text.NewGoXFace(arcadeFont), titleTextExtraDrawOptions)
 		}
-		titleTextExtraDrawOptions.DrawImageOptions.GeoM = titleExtraGeoMatrix
+		titleTextExtraDrawOptions.GeoM = titleExtraGeoMatrix
 
 		for index := len(dots) - 1; index >= 0; index-- {
 			dots[index].draw(screen, camX, camY)
@@ -457,10 +455,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			if i-1 > -1 {
 				tx = ((len(titleTexts[i-1]) - len(l)) * fontSize) / 2
 			}
-			gameOverDrawOptions.DrawImageOptions.GeoM.Translate(float64(tx), float64(i+fontSize+newlinePadding))
+			gameOverDrawOptions.GeoM.Translate(float64(tx), float64(i+fontSize+newlinePadding))
 			text.Draw(screen, l, text.NewGoXFace(arcadeFont), gameOverDrawOptions)
 		}
-		gameOverDrawOptions.DrawImageOptions.GeoM = gameOverGeoMatrix
+		gameOverDrawOptions.GeoM = gameOverGeoMatrix
 
 		player.drawStats(screen)
 		for index := len(dots) - 1; index >= 0; index-- {
@@ -475,10 +473,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			if i-1 > -1 {
 				tx = (len(titleTexts[i-1]) - len(l)) * fontSize
 			}
-			pauseDrawOptions.DrawImageOptions.GeoM.Translate(float64(tx), float64(i+fontSize+newlinePadding))
+			pauseDrawOptions.GeoM.Translate(float64(tx), float64(i+fontSize+newlinePadding))
 			text.Draw(screen, l, text.NewGoXFace(arcadeFont), pauseDrawOptions)
 		}
-		pauseDrawOptions.DrawImageOptions.GeoM = pauseGeoMatrix
+		pauseDrawOptions.GeoM = pauseGeoMatrix
 
 		// Draw the dots at their current position relative to the camera
 		for index := len(dots) - 1; index >= 0; index-- {
@@ -491,8 +489,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		// Draw the enemies
 		for index := len(enemies) - 1; index >= 0; index-- {
-			if (((enemies[index].x-camX) < 0 || (enemies[index].x-camX) > screenWidth) &&
-				((enemies[index].y-camY) < 0 || (enemies[index].y-camY) > screenHeight)) {
+			if ((enemies[index].x-camX) < 0 || (enemies[index].x-camX) > screenWidth) &&
+				((enemies[index].y-camY) < 0 || (enemies[index].y-camY) > screenHeight) {
 				continue
 			}
 			if enemies[index].points > 0 && !enemies[index].dead {
@@ -545,8 +543,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		// Draw the enemies
 		for index := len(enemies) - 1; index >= 0; index-- {
-			if (((enemies[index].x-camX) < 0 || (enemies[index].x-camX) > screenWidth) &&
-				((enemies[index].y-camY) < 0 || (enemies[index].y-camY) > screenHeight)) {
+			if ((enemies[index].x-camX) < 0 || (enemies[index].x-camX) > screenWidth) &&
+				((enemies[index].y-camY) < 0 || (enemies[index].y-camY) > screenHeight) {
 				continue
 			}
 			if enemies[index].points > 0 && !enemies[index].dead {
