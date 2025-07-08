@@ -5,8 +5,9 @@ Written in `go`.<br>
 Inspired by [Risk of Rain](https://en.wikipedia.org/wiki/Risk_of_Rain).<br>
 Using the [ebiten](https://github.com/hajimehoshi/ebiten) engine for the game objects and the game rendering. <br>
 
-# How to run
-You can run this game by building the go app `go build -o ./bin/game ./cmd/gogame/main.go ; ./bin/game` or run the go app directly `go run .`
+# Install and Run
+`go install github.com/bramca/Go-Game/cmd/gogame@latest`
+`./gogame`
 
 # Controls
 `mouse right` hold it to shoot your gun.<br>
