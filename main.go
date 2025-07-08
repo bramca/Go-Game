@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"golang.org/x/image/font"
 )
 
@@ -26,6 +26,11 @@ const (
 )
 
 var (
+	titleTexts      = []string{"GO FOREVER"}
+	titleTextsExtra = []string{"PRESS SPACE KEY"}
+	gameOverTexts   = []string{"GAME OVER!", "PRESS SPACE KEY"}
+	pauseTexts      = []string{"PAUSED", "PRESS SPACE KEY"}
+
 	playerStartSpeed        = 6.0
 	playerStartAcceleration = 0.2
 	pointsPerHit            = 2
@@ -35,7 +40,20 @@ var (
 	camX = 0.0
 	camY = 0.0
 
-	healthBarSize = 5.0
+	healthBarSize = 7.0
+
+	// text geo matrices
+	scoreGeoMatrix      ebiten.GeoM
+	titleGeoMatrix      ebiten.GeoM
+	titleExtraGeoMatrix ebiten.GeoM
+	gameOverGeoMatrix   ebiten.GeoM
+	pauseGeoMatrix      ebiten.GeoM
+
+	// text padding
+	newlinePadding = 20
+
+	// text colorscales
+	scoreColorScale = ebiten.ColorScale{}
 
 	playerStartPoints         = 15
 	playerFriction            = 0.05
@@ -121,10 +139,11 @@ var (
 	arcadeFont      font.Face
 	healthBarFont   font.Face
 
-	healthBarFontColor = color.RGBA{255, 255, 255, 240}
+	healthBarFontColor = color.RGBA{0, 0, 0, 240}
 
-	fontSize      = 24
-	titleFontSize = 36
+	fontSize            = 24
+	titleFontSize       = 36
+	titleFontColorScale = ebiten.ColorScale{}
 
 	hitFontSize       = 10
 	scoreFontSize     = 14
@@ -137,6 +156,13 @@ var (
 	recticle = Recticle{
 		size: 6,
 	}
+
+	// draw options
+	titleDrawOptions          *text.DrawOptions
+	scoreDrawOptions          *text.DrawOptions
+	titleTextExtraDrawOptions *text.DrawOptions
+	gameOverDrawOptions       *text.DrawOptions
+	pauseDrawOptions          *text.DrawOptions
 )
 
 // Game implements ebiten.Game interface.
@@ -151,7 +177,55 @@ func (g *Game) initialize() {
 	enemies = []*Enemy{}
 	lootBoxes = []*LootBox{}
 	rubberDucks = []*RubberDuck{}
+
+	// place text
+	scoreGeoMatrix = ebiten.GeoM{}
+	titleGeoMatrix = ebiten.GeoM{}
+	titleExtraGeoMatrix = ebiten.GeoM{}
+	gameOverGeoMatrix = ebiten.GeoM{}
+	pauseGeoMatrix = ebiten.GeoM{}
+
+	scoreGeoMatrix.Translate(float64(scoreFontSize), float64(scoreFontSize+10))
+	titleGeoMatrix.Translate(float64(screenWidth-len(titleTexts[0])*titleFontSize)/2, float64(4*titleFontSize))
+	titleExtraGeoMatrix.Translate(float64(screenWidth-len(titleTextsExtra[0])*fontSize)/2, float64(10*fontSize))
+	gameOverGeoMatrix.Translate(float64(screenWidth-len(gameOverTexts[0])*fontSize)/2, float64(8*fontSize))
+	pauseGeoMatrix.Translate(float64((screenWidth-len(pauseTexts[0])*fontSize)/2), float64(8*fontSize))
+
+	// set text draw options
+	titleDrawOptions = &text.DrawOptions{
+		DrawImageOptions: ebiten.DrawImageOptions{
+			GeoM:       titleGeoMatrix,
+			ColorScale: titleFontColorScale,
+		},
+	}
+	scoreDrawOptions = &text.DrawOptions{
+		DrawImageOptions: ebiten.DrawImageOptions{
+			GeoM:       scoreGeoMatrix,
+			ColorScale: scoreColorScale,
+		},
+	}
+	titleTextExtraDrawOptions = &text.DrawOptions{
+		DrawImageOptions: ebiten.DrawImageOptions{
+			GeoM:       titleExtraGeoMatrix,
+			ColorScale: titleFontColorScale,
+		},
+	}
+	gameOverDrawOptions = &text.DrawOptions{
+		DrawImageOptions: ebiten.DrawImageOptions{
+			GeoM:       gameOverGeoMatrix,
+			ColorScale: titleFontColorScale,
+		},
+	}
+	pauseDrawOptions = &text.DrawOptions{
+		DrawImageOptions: ebiten.DrawImageOptions{
+			GeoM:       pauseGeoMatrix,
+			ColorScale: titleFontColorScale,
+		},
+	}
+
+	// colors
 	backgroundColor = color.RGBA{R: 8, G: 14, B: 44, A: 1}
+	scoreColorScale.ScaleWithColor(scoreColor)
 
 	player.img = playerImage
 	player.w = float64(playerImage.Bounds().Dx())
@@ -169,8 +243,9 @@ func (g *Game) initialize() {
 		maxPoints:       player.maxPoints,
 		healthBarColor:  playerHealthbarColors[0],
 		healthLostColor: playerHealthbarColors[1],
-		textFont:        healthBarFont,
+		textFont:        text.NewGoXFace(healthBarFont),
 	}
+	player.healthBar.setDrawOptions()
 	player.lasers = []*Laser{}
 	player.tempRewards = []*TempReward{}
 	player.score = 0
@@ -189,8 +264,6 @@ func (g *Game) initialize() {
 	camY = player.y + player.h/2 - screenHeight/2
 
 	spawnDots(screenWidth, screenHeight)
-
-	// spawnEnemies()
 
 	spawnLootBoxes()
 
@@ -223,7 +296,7 @@ func (g *Game) Update() error {
 		frameCount += 1
 
 		keyPressed := false
-		if math.Sqrt(math.Pow(player.xSpeed, 2)+math.Pow(player.ySpeed, 2)) < player.speed {
+		if math.Sqrt(player.xSpeed*player.xSpeed+player.ySpeed*player.ySpeed) < player.speed {
 			if ebiten.IsKeyPressed(ebiten.KeyDown) || ebiten.IsKeyPressed(ebiten.KeyS) {
 				player.ySpeed += player.acceleration
 				keyPressed = true
@@ -352,28 +425,41 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(backgroundColor)
 	switch g.mode {
 	case ModeTitle:
-		titleTexts := []string{"GO FOREVER"}
-		texts := []string{"", "", "", "", "", "", "", "PRESS SPACE KEY"}
-
 		for i, l := range titleTexts {
-			x := (screenWidth - len(l)*titleFontSize) / 2
-			text.Draw(screen, l, titleArcadeFont, x, (i+4)*titleFontSize, color.White)
+			tx := 0
+			if i-1 > -1 {
+				tx = (len(titleTexts[i-1]) - len(l)) * titleFontSize
+			}
+			titleDrawOptions.GeoM.Translate(float64(tx), float64(i+titleFontSize+newlinePadding))
+			text.Draw(screen, l, text.NewGoXFace(titleArcadeFont), titleDrawOptions)
 		}
+		titleDrawOptions.GeoM = titleGeoMatrix
 
-		for i, l := range texts {
-			x := (screenWidth - len(l)*fontSize) / 2
-			text.Draw(screen, l, arcadeFont, x, (i+4)*fontSize, color.White)
+		for i, l := range titleTextsExtra {
+			tx := 0
+			if i-1 > -1 {
+				tx = ((len(titleTexts[i-1]) - len(l)) * fontSize) / 2
+			}
+			titleTextExtraDrawOptions.GeoM.Translate(float64(tx), float64(i+fontSize+newlinePadding))
+			text.Draw(screen, l, text.NewGoXFace(arcadeFont), titleTextExtraDrawOptions)
 		}
+		titleTextExtraDrawOptions.GeoM = titleExtraGeoMatrix
+
 		for index := len(dots) - 1; index >= 0; index-- {
 			dots[index].draw(screen, camX, camY)
 		}
 		recticle.draw(screen)
 	case ModeGameOver:
-		texts := []string{"", "GAME OVER!", "", "", "PRESS SPACE KEY"}
-		for i, l := range texts {
-			x := (screenWidth - len(l)*fontSize) / 2
-			text.Draw(screen, l, arcadeFont, x, (i+4)*fontSize, color.White)
+		for i, l := range gameOverTexts {
+			tx := 0
+			if i-1 > -1 {
+				tx = ((len(titleTexts[i-1]) - len(l)) * fontSize) / 2
+			}
+			gameOverDrawOptions.GeoM.Translate(float64(tx), float64(i+fontSize+newlinePadding))
+			text.Draw(screen, l, text.NewGoXFace(arcadeFont), gameOverDrawOptions)
 		}
+		gameOverDrawOptions.GeoM = gameOverGeoMatrix
+
 		player.drawStats(screen)
 		for index := len(dots) - 1; index >= 0; index-- {
 			if !dots[index].eaten {
@@ -382,11 +468,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 		recticle.draw(screen)
 	case ModePause:
-		texts := []string{"", "PAUSED", "", "", "PRESS SPACE KEY"}
-		for i, l := range texts {
-			x := (screenWidth - len(l)*fontSize) / 2
-			text.Draw(screen, l, arcadeFont, x, (i+4)*fontSize, color.White)
+		for i, l := range pauseTexts {
+			tx := 0
+			if i-1 > -1 {
+				tx = (len(titleTexts[i-1]) - len(l)) * fontSize
+			}
+			pauseDrawOptions.GeoM.Translate(float64(tx), float64(i+fontSize+newlinePadding))
+			text.Draw(screen, l, text.NewGoXFace(arcadeFont), pauseDrawOptions)
 		}
+		pauseDrawOptions.GeoM = pauseGeoMatrix
+
 		// Draw the dots at their current position relative to the camera
 		for index := len(dots) - 1; index >= 0; index-- {
 			if !dots[index].eaten && dots[index].duration > 0 {
@@ -398,8 +489,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		// Draw the enemies
 		for index := len(enemies) - 1; index >= 0; index-- {
+			if ((enemies[index].x-camX) < 0 || (enemies[index].x-camX) > screenWidth) &&
+				((enemies[index].y-camY) < 0 || (enemies[index].y-camY) > screenHeight) {
+				continue
+			}
 			if enemies[index].points > 0 && !enemies[index].dead {
-				enemies[index].draw(screen, float64(enemies[index].x-camX), float64(enemies[index].y-camY), dots)
+				enemies[index].draw(screen, float64(enemies[index].x-camX), float64(enemies[index].y-camY))
 				enemies[index].drawHits(screen)
 				enemies[index].drawLasers(screen, enemies[index].x-camX, enemies[index].y-camY)
 			}
@@ -448,19 +543,25 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		// Draw the enemies
 		for index := len(enemies) - 1; index >= 0; index-- {
+			if ((enemies[index].x-camX) < 0 || (enemies[index].x-camX) > screenWidth) &&
+				((enemies[index].y-camY) < 0 || (enemies[index].y-camY) > screenHeight) {
+				continue
+			}
 			if enemies[index].points > 0 && !enemies[index].dead {
-				enemies[index].draw(screen, float64(enemies[index].x-camX), float64(enemies[index].y-camY), dots)
+				enemies[index].draw(screen, float64(enemies[index].x-camX), float64(enemies[index].y-camY))
 				enemies[index].drawHits(screen)
 				enemies[index].drawLasers(screen, enemies[index].x-camX, enemies[index].y-camY)
 			} else if !enemies[index].dead {
+				dot := Dot{
+					x:        int(enemies[index].x),
+					y:        int(enemies[index].y - enemies[index].h),
+					color:    enemyHitColor,
+					msg:      "+" + strconv.Itoa(enemies[index].maxPoints),
+					textFont: text.NewGoXFace(hitTextFont),
+				}
+				setDotDrawOptions(&dot)
 				enemies[index].hits = append(enemies[index].hits, Hit{
-					Dot: Dot{
-						x:        int(enemies[index].x),
-						y:        int(enemies[index].y - enemies[index].h),
-						color:    enemyHitColor,
-						msg:      "+" + strconv.Itoa(enemies[index].maxPoints),
-						textFont: hitTextFont,
-					},
+					Dot:      dot,
 					duration: 2 * framesPerSecond / 3,
 				})
 				enemies[index].dead = true
@@ -480,14 +581,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				lootBoxes[index].draw(screen, float64(lootBoxes[index].x-camX), float64(lootBoxes[index].y-camY))
 				lootBoxes[index].drawHits(screen)
 			} else if !lootBoxes[index].broken && lootBoxes[index].duration > 0 {
+				dot := Dot{
+					x:        int(lootBoxes[index].x),
+					y:        int(lootBoxes[index].y - lootBoxes[index].h),
+					color:    lootBoxHitColor,
+					msg:      "+" + lootBoxes[index].reward,
+					textFont: text.NewGoXFace(hitTextFont),
+				}
+				setDotDrawOptions(&dot)
 				lootBoxes[index].hits = append(lootBoxes[index].hits, Hit{
-					Dot: Dot{
-						x:        int(lootBoxes[index].x),
-						y:        int(lootBoxes[index].y - lootBoxes[index].h),
-						color:    lootBoxHitColor,
-						msg:      "+" + lootBoxes[index].reward,
-						textFont: hitTextFont,
-					},
+					Dot:      dot,
 					duration: framesPerSecond,
 				})
 				lootBoxes[index].broken = true
@@ -504,14 +607,16 @@ func (g *Game) Draw(screen *ebiten.Image) {
 				rubberDucks[index].draw(screen, float64(rubberDucks[index].x-camX), float64(rubberDucks[index].y-camY))
 				rubberDucks[index].drawHits(screen)
 			} else if !rubberDucks[index].dead {
+				dot := Dot{
+					x:        int(rubberDucks[index].x),
+					y:        int(rubberDucks[index].y - rubberDucks[index].h),
+					color:    lootBoxHitColor,
+					msg:      "+" + rubberDucks[index].reward,
+					textFont: text.NewGoXFace(hitTextFont),
+				}
+				setDotDrawOptions(&dot)
 				rubberDucks[index].hits = append(rubberDucks[index].hits, Hit{
-					Dot: Dot{
-						x:        int(rubberDucks[index].x),
-						y:        int(rubberDucks[index].y - rubberDucks[index].h),
-						color:    lootBoxHitColor,
-						msg:      "+" + rubberDucks[index].reward,
-						textFont: hitTextFont,
-					},
+					Dot:      dot,
 					duration: framesPerSecond,
 				})
 				rubberDucks[index].dead = true

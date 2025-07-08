@@ -23,12 +23,6 @@ type Enemy struct {
 
 func (p *Enemy) brain(dots []*Dot, player *Player) {
 	//TODO: make enemies behavior more interesting
-	// if p.greedy > 0.5 && p.aggressive > 0.5 {
-
-	// }
-	// if p.greedy > 0.5 && p.aggressive < 0.5 {
-
-	// }
 	if p.greedy < 0.5 && p.aggressive > 0.5 {
 		if p.detectPlayer(player) {
 			p.shootLasers(player)
@@ -40,9 +34,6 @@ func (p *Enemy) brain(dots []*Dot, player *Player) {
 			p.eatDots(dots)
 		}
 	}
-	// if p.greedy < 0.5 && p.aggressive < 0.5 {
-
-	// }
 }
 
 func (p *Enemy) searchDots(dots []*Dot) {
@@ -58,7 +49,7 @@ func (p *Enemy) update() {
 	p.damage = p.maxPoints / 10
 }
 
-func (p *Enemy) draw(screen *ebiten.Image, x float64, y float64, dots []*Dot) {
+func (p *Enemy) draw(screen *ebiten.Image, x float64, y float64) {
 	// Draw the enemy
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(-float64(p.w/2), -float64(p.h/2))

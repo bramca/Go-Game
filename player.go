@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
 type Player struct {
@@ -156,15 +156,17 @@ func (p *Player) update(x, y float64, dots []*Dot) {
 	p.angle = angleBetweenPoints(x, y, float64(mx), float64(my))
 	for dotIndex := range dots {
 		if !dots[dotIndex].eaten && dots[dotIndex].duration > 0 && (distanceBetweenPoints(p.x+p.xSpeed, p.y+p.ySpeed, float64(dots[dotIndex].x), float64(dots[dotIndex].y)) < p.w*0.8 || distanceBetweenPoints(p.x+p.xSpeed, p.y+p.ySpeed, float64(dots[dotIndex].x+len(dots[dotIndex].msg)), float64(dots[dotIndex].y)) < p.w) {
+			dot := Dot{
+				x:        dots[dotIndex].x,
+				y:        dots[dotIndex].y,
+				color:    dotHitColor,
+				msg:      "+" + strconv.Itoa(pointsPerDot),
+				textFont: text.NewGoXFace(hitTextFont),
+			}
+			setDotDrawOptions(&dot)
 			p.points += pointsPerDot
 			dots[dotIndex].hits = append(dots[dotIndex].hits, Hit{
-				Dot: Dot{
-					x:        dots[dotIndex].x,
-					y:        dots[dotIndex].y,
-					color:    dotHitColor,
-					msg:      "+" + strconv.Itoa(pointsPerDot),
-					textFont: hitTextFont,
-				},
+				Dot:      dot,
 				duration: 2 * framesPerSecond / 3,
 			})
 			dots[dotIndex].eaten = true
@@ -198,13 +200,16 @@ func (p *Player) drawTempRewards(screen *ebiten.Image) {
 }
 
 func (p *Player) drawStats(screen *ebiten.Image) {
-	text.Draw(screen, fmt.Sprintf("Score: %d", p.score), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
-	text.Draw(screen, fmt.Sprintf("\nGun: %s", p.gun), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+	text.Draw(screen, fmt.Sprintf("Score: %d", p.score), text.NewGoXFace(scoreTextFont), scoreDrawOptions)
+	scoreDrawOptions.GeoM.Translate(0, float64(newlinePadding))
+	text.Draw(screen, fmt.Sprintf("Gun: %s", p.gun), text.NewGoXFace(scoreTextFont), scoreDrawOptions)
+	scoreDrawOptions.GeoM.Translate(0, float64(newlinePadding))
 	if p.ammo >= 0 {
-		text.Draw(screen, fmt.Sprintf("\n\nAmmo: %d", p.ammo), scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+		text.Draw(screen, fmt.Sprintf("Ammo: %d", p.ammo), text.NewGoXFace(scoreTextFont), scoreDrawOptions)
 	} else {
-		text.Draw(screen, "\n\nAmmo: Infinite", scoreTextFont, scoreFontSize, scoreFontSize+10, scoreColor)
+		text.Draw(screen, "Ammo: Infinite", text.NewGoXFace(scoreTextFont), scoreDrawOptions)
 	}
+	scoreDrawOptions.GeoM = scoreGeoMatrix
 }
 
 func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {
@@ -235,14 +240,16 @@ func (p *Player) updateLasers() {
 					p.points += healing
 				}
 				hit = true
+				dot := Dot{
+					x:        int(enemy.x),
+					y:        int(enemy.y - enemy.h/2),
+					color:    damageColor,
+					msg:      strconv.Itoa(-damage),
+					textFont: text.NewGoXFace(hitTextFont),
+				}
+				setDotDrawOptions(&dot)
 				enemy.hits = append(enemy.hits, Hit{
-					Dot: Dot{
-						x:        int(enemy.x),
-						y:        int(enemy.y - enemy.h/2),
-						color:    damageColor,
-						msg:      strconv.Itoa(-damage),
-						textFont: hitTextFont,
-					},
+					Dot:      dot,
 					duration: 2 * framesPerSecond / 3,
 				})
 			}
@@ -251,19 +258,21 @@ func (p *Player) updateLasers() {
 			if !lootBox.broken && lootBox.duration > 0 && math.Abs(float64(p.lasers[index].y+p.lasers[index].speed*math.Sin(p.lasers[index].angle))-float64(lootBox.y)) < lootBox.h/2 && math.Abs(float64(p.lasers[index].x+p.lasers[index].speed*math.Cos(p.lasers[index].angle))-float64(lootBox.x)) < lootBox.w/2 {
 				lootBox.hitpoints -= p.lasers[index].damage
 				hit = true
-				lootBox.hits = append(lootBox.hits, Hit{
-					Dot: Dot{
-						x: int(lootBox.x),
-						y: int(lootBox.y - lootBox.h/2),
-						color: color.RGBA{
-							R: 0xff,
-							G: 0xff,
-							B: 0xff,
-							A: 0xf0,
-						},
-						msg:      strconv.Itoa(-p.lasers[index].damage),
-						textFont: hitTextFont,
+				dot := Dot{
+					x: int(lootBox.x),
+					y: int(lootBox.y - lootBox.h/2),
+					color: color.RGBA{
+						R: 0xff,
+						G: 0xff,
+						B: 0xff,
+						A: 0xf0,
 					},
+					msg:      strconv.Itoa(-p.lasers[index].damage),
+					textFont: text.NewGoXFace(hitTextFont),
+				}
+				setDotDrawOptions(&dot)
+				lootBox.hits = append(lootBox.hits, Hit{
+					Dot:      dot,
 					duration: 2 * framesPerSecond / 3,
 				})
 			}
@@ -276,19 +285,21 @@ func (p *Player) updateLasers() {
 				}
 				rubberDuck.points -= damage
 				hit = true
-				rubberDuck.hits = append(rubberDuck.hits, Hit{
-					Dot: Dot{
-						x: int(rubberDuck.x),
-						y: int(rubberDuck.y - rubberDuck.h/2),
-						color: color.RGBA{
-							R: 0xff,
-							G: 0xff,
-							B: 0xff,
-							A: 0xf0,
-						},
-						msg:      strconv.Itoa(-p.lasers[index].damage),
-						textFont: hitTextFont,
+				dot := Dot{
+					x: int(rubberDuck.x),
+					y: int(rubberDuck.y - rubberDuck.h/2),
+					color: color.RGBA{
+						R: 0xff,
+						G: 0xff,
+						B: 0xff,
+						A: 0xf0,
 					},
+					msg:      strconv.Itoa(-p.lasers[index].damage),
+					textFont: text.NewGoXFace(hitTextFont),
+				}
+				setDotDrawOptions(&dot)
+				rubberDuck.hits = append(rubberDuck.hits, Hit{
+					Dot:      dot,
 					duration: 2 * framesPerSecond / 3,
 				})
 			}

@@ -5,9 +5,8 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
-	"golang.org/x/image/font"
 )
 
 type HealthBar struct {
@@ -17,11 +16,25 @@ type HealthBar struct {
 	maxPoints       int
 	healthBarColor  color.RGBA
 	healthLostColor color.RGBA
-	textFont        font.Face
+	drawOptions     *text.DrawOptions
+	textFont        *text.GoXFace
+}
+
+func (h *HealthBar) setDrawOptions() {
+	h.drawOptions = &text.DrawOptions{}
+	healthBarMsg := fmt.Sprintf("%d/%d", h.points, h.maxPoints)
+	h.drawOptions.GeoM.Translate(float64(h.x+h.w/2)-float64(len(healthBarMsg)*healthBarFontSize/2), float64(h.y))
+	h.drawOptions.ColorScale.SetR(float32(healthBarFontColor.R) / 256.0)
+	h.drawOptions.ColorScale.SetG(float32(healthBarFontColor.G) / 256.0)
+	h.drawOptions.ColorScale.SetB(float32(healthBarFontColor.B) / 256.0)
+	h.drawOptions.ColorScale.SetA(float32(healthBarFontColor.A) / 256.0)
 }
 
 func (h *HealthBar) update(x, y float64, points, maxPoints int) {
 	h.x, h.y = x, y
+	healthBarMsg := fmt.Sprintf("%d/%d", h.points, h.maxPoints)
+	h.drawOptions.GeoM.Reset()
+	h.drawOptions.GeoM.Translate(float64(h.x+h.w/2)-float64(len(healthBarMsg)*healthBarFontSize/2), float64(h.y))
 	h.points, h.maxPoints = points, maxPoints
 }
 
@@ -35,5 +48,5 @@ func (h *HealthBar) draw(screen *ebiten.Image) {
 	vector.DrawFilledRect(screen, x1, y1, w1, h1, h.healthBarColor, false)
 	vector.DrawFilledRect(screen, x2, y2, w2, h2, h.healthLostColor, false)
 	healthBarMsg := fmt.Sprintf("%d/%d", h.points, h.maxPoints)
-	text.Draw(screen, healthBarMsg, h.textFont, int(h.x), int(h.y), healthBarFontColor)
+	text.Draw(screen, healthBarMsg, h.textFont, h.drawOptions)
 }

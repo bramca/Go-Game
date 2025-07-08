@@ -7,8 +7,10 @@ import (
 	"math"
 	"math/rand"
 
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
 )
@@ -18,7 +20,7 @@ func angleBetweenPoints(x1, y1, x2, y2 float64) float64 {
 }
 
 func distanceBetweenPoints(x1, y1, x2, y2 float64) float64 {
-	return math.Sqrt(math.Pow(x2-x1, 2) + math.Pow(y2-y1, 2))
+	return math.Sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1))
 }
 
 func randomHex(n int) (string, error) {
@@ -29,14 +31,23 @@ func randomHex(n int) (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
+func setDotDrawOptions(d *Dot) {
+	drawOptions := text.DrawOptions{
+		DrawImageOptions: ebiten.DrawImageOptions{},
+	}
+	drawOptions.ColorScale.SetR(float32(d.color.R) / 256.0)
+	drawOptions.ColorScale.SetG(float32(d.color.G) / 256.0)
+	drawOptions.ColorScale.SetB(float32(d.color.B) / 256.0)
+	drawOptions.ColorScale.SetA(float32(d.color.G) / 256.0)
+	d.drawOptions = &drawOptions
+}
+
 func spawnDots(xBound, yBound int) {
-	for i := 0; i < dotSpawnCount; i++ {
+	for range dotSpawnCount {
 		x := int(camX + float64(rand.Intn(xBound)))
 		y := int(camY + float64(rand.Intn(yBound)))
-		// x := int(camX + float64(rand.Intn(screenWidth)))
-		// y := int(camY + float64(rand.Intn(screenHeight)))
 		msg, _ := randomHex(4)
-		dots = append(dots, &Dot{
+		dot := &Dot{
 			x: x,
 			y: y,
 			color: color.RGBA{
@@ -46,9 +57,11 @@ func spawnDots(xBound, yBound int) {
 				A: 0xf0,
 			},
 			msg:      msg,
-			textFont: dotTextFont,
+			textFont: text.NewGoXFace(dotTextFont),
 			duration: minDotDuration + rand.Intn(maxDotDuration-minDotDuration),
-		})
+		}
+		setDotDrawOptions(dot)
+		dots = append(dots, dot)
 	}
 }
 
@@ -65,6 +78,18 @@ func spawnEnemies() {
 		visibleRange := float64(int(math.Min(screenWidth, screenHeight))+rand.Intn(int(math.Max(screenWidth, screenHeight))-int(math.Min(screenWidth, screenHeight)))) / 2
 		aggressiveness := 0.6
 		greediness := 0.4
+		healthBar := HealthBar{
+			x:               x,
+			y:               y - h,
+			w:               w,
+			h:               healthBarSize,
+			points:          points,
+			maxPoints:       maxPoints,
+			healthBarColor:  enemyHealthbarColors[0],
+			healthLostColor: enemyHealthbarColors[1],
+			textFont:        text.NewGoXFace(healthBarFont),
+		}
+		healthBar.setDrawOptions()
 		enemies = append(enemies, &Enemy{
 			Player: Player{
 				x:          x,
@@ -79,18 +104,8 @@ func spawnEnemies() {
 				xSpeed:     0,
 				points:     points,
 				maxPoints:  maxPoints,
-				healthBar: HealthBar{
-					x:               x,
-					y:               y - h,
-					w:               w,
-					h:               healthBarSize,
-					points:          points,
-					maxPoints:       maxPoints,
-					healthBarColor:  enemyHealthbarColors[0],
-					healthLostColor: enemyHealthbarColors[1],
-					textFont:        healthBarFont,
-				},
-				damage: pointsPerHit + maxPoints/10,
+				healthBar:  healthBar,
+				damage:     pointsPerHit + maxPoints/10,
 			},
 			dotTargetIndex:     -1,
 			visibleRange:       visibleRange,
@@ -113,6 +128,18 @@ func spawnRubberDucks() {
 		points := rubberDuckStartPoints + player.score/100
 		maxPoints := rubberDuckStartPoints + player.score/100
 		visibleRange := float64(int(math.Min(screenWidth, screenHeight))+rand.Intn(int(math.Max(screenWidth, screenHeight))-int(math.Min(screenWidth, screenHeight)))) / 4
+		healthBar := HealthBar{
+			x:               x,
+			y:               y - h,
+			w:               w,
+			h:               healthBarSize,
+			points:          points,
+			maxPoints:       maxPoints,
+			healthBarColor:  rubberDuckHealthBarColors[0],
+			healthLostColor: rubberDuckHealthBarColors[1],
+			textFont:        text.NewGoXFace(healthBarFont),
+		}
+		healthBar.setDrawOptions()
 		rubberDucks = append(rubberDucks, &RubberDuck{
 			Player: Player{
 				x:           x,
@@ -127,17 +154,7 @@ func spawnRubberDucks() {
 				xSpeed:      0,
 				points:      points,
 				maxPoints:   maxPoints,
-				healthBar: HealthBar{
-					x:               x,
-					y:               y - h,
-					w:               w,
-					h:               healthBarSize,
-					points:          points,
-					maxPoints:       maxPoints,
-					healthBarColor:  rubberDuckHealthBarColors[0],
-					healthLostColor: rubberDuckHealthBarColors[1],
-					textFont:        healthBarFont,
-				},
+				healthBar:   healthBar,
 			},
 			visibleRange:       visibleRange,
 			fleeRange:          2 * visibleRange,
@@ -156,6 +173,18 @@ func spawnLootBoxes() {
 		w := float64(lootBoxImage.Bounds().Dx())
 		h := float64(lootBoxImage.Bounds().Dy())
 		hitPoints := lootBoxHealth + player.score/100
+		healthBar := HealthBar{
+			x:               x,
+			y:               y - h,
+			w:               w,
+			h:               healthBarSize,
+			points:          hitPoints,
+			maxPoints:       hitPoints,
+			healthBarColor:  lootBoxHealthbarColors[0],
+			healthLostColor: lootBoxHealthbarColors[1],
+			textFont:        text.NewGoXFace(healthBarFont),
+		}
+		healthBar.setDrawOptions()
 		lootBoxes = append(lootBoxes, &LootBox{
 			x:            x,
 			y:            y,
@@ -165,19 +194,9 @@ func spawnLootBoxes() {
 			reward:       lootRewards[rand.Intn(len(lootRewards))],
 			hitpoints:    hitPoints,
 			maxHitPoints: hitPoints,
-			healthBar: HealthBar{
-				x:               x,
-				y:               y - h,
-				w:               w,
-				h:               healthBarSize,
-				points:          hitPoints,
-				maxPoints:       hitPoints,
-				healthBarColor:  lootBoxHealthbarColors[0],
-				healthLostColor: lootBoxHealthbarColors[1],
-				textFont:        healthBarFont,
-			},
-			img:      lootBoxImage,
-			duration: minLootBoxDuration + rand.Intn(maxLootBoxDuration-minLootBoxDuration),
+			healthBar:    healthBar,
+			img:          lootBoxImage,
+			duration:     minLootBoxDuration + rand.Intn(maxLootBoxDuration-minLootBoxDuration),
 		})
 	}
 }
@@ -234,6 +253,8 @@ func initialize() {
 		DPI:     dpi,
 		Hinting: font.HintingFull,
 	})
+
+	titleFontColorScale.ScaleWithColor(color.White)
 }
 
 func activateTempReward(lootReward string, duration int) {
