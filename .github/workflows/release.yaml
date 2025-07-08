@@ -19,6 +19,15 @@ jobs:
           - goarch: arm64
             goos: windows
     steps:
+      - id: modify-apt-get-config
+        run: |
+            sudo cp /etc/apt/sources.list /etc/apt/sources.list~
+            sudo sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list
+            sudo apt-get update
+        shell: bash
+      - id: install-deps
+        run: sudo apt-get build-dep glfw3
+        shell: bash
       - uses: actions/checkout@v3
       - name: Set up Go 1.24.4
         uses: actions/setup-go@v3
