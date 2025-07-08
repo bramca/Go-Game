@@ -6,7 +6,7 @@ Inspired by [Risk of Rain](https://en.wikipedia.org/wiki/Risk_of_Rain).<br>
 Using the [ebiten](https://github.com/hajimehoshi/ebiten) engine for the game objects and the game rendering. <br>
 
 # How to run
-You can run this game by building the go app `go build . ; ./game` or run the go app directly `go run .`
+You can run this game by building the go app `go build -o ./bin/game ./cmd/gogame/main.go ; ./bin/game` or run the go app directly `go run .`
 
 # Controls
 `mouse right` hold it to shoot your gun.<br>
@@ -18,7 +18,7 @@ You can run this game by building the go app `go build . ; ./game` or run the go
 
 # Special enemies
 - ![rust](./resources/rust.png)![cpp](./resources/cpp.png)![csharp](./resources/csharp.png)![haskell](./resources/haskell.png)![java](./resources/java.png)![javascript](./resources/javascript.png)![python](./resources/python.png) <br> other programming languages are the main enemies.<br>
-- ![github](./resources/github.png) lootbox with random powerup.<br> 
+- ![github](./resources/github.png) lootbox with random powerup.<br>
 - ![rubber duck](./resources/rubber_duck.png) a rubber duck carrying a random gun.<br>
 
 # Permanent Powerups

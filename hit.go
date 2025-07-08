@@ -1,4 +1,4 @@
-package main
+package gogame
 
 type Hit struct {
 	Dot

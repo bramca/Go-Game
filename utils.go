@@ -1,4 +1,4 @@
-package main
+package gogame
 
 import (
 	randcrypto "crypto/rand"
@@ -69,13 +69,13 @@ func spawnEnemies() {
 	for i := len(enemies); i < maxEnemies+int(player.score/100); i++ {
 		numberOfEnemies := maxEnemies + int(player.score/100)
 		enemyImg := enemyImages[rand.Intn(len(enemyImages))]
-		x := camX + float64(rand.Intn(screenWidth*(4+numberOfEnemies/30)))
-		y := camY + float64(rand.Intn(screenHeight*(4+numberOfEnemies/30)))
+		x := camX + float64(rand.Intn(ScreenWidth*(4+numberOfEnemies/30)))
+		y := camY + float64(rand.Intn(ScreenHeight*(4+numberOfEnemies/30)))
 		w := float64(enemyImg.Bounds().Dx())
 		h := float64(enemyImg.Bounds().Dy())
 		points := enemyStartPoints + player.score/100
 		maxPoints := enemyStartPoints + player.score/100
-		visibleRange := float64(int(math.Min(screenWidth, screenHeight))+rand.Intn(int(math.Max(screenWidth, screenHeight))-int(math.Min(screenWidth, screenHeight)))) / 2
+		visibleRange := float64(int(math.Min(ScreenWidth, ScreenHeight))+rand.Intn(int(math.Max(ScreenWidth, ScreenHeight))-int(math.Min(ScreenWidth, ScreenHeight)))) / 2
 		aggressiveness := 0.6
 		greediness := 0.4
 		healthBar := HealthBar{
@@ -121,13 +121,13 @@ func spawnEnemies() {
 
 func spawnRubberDucks() {
 	for i := len(rubberDucks); i < maxRubberDucks; i++ {
-		x := camX + float64(rand.Intn(screenWidth*6))
-		y := camY + float64(rand.Intn(screenHeight*6))
+		x := camX + float64(rand.Intn(ScreenWidth*6))
+		y := camY + float64(rand.Intn(ScreenHeight*6))
 		w := float64(rubberDuckImage.Bounds().Dx())
 		h := float64(rubberDuckImage.Bounds().Dy())
 		points := rubberDuckStartPoints + player.score/100
 		maxPoints := rubberDuckStartPoints + player.score/100
-		visibleRange := float64(int(math.Min(screenWidth, screenHeight))+rand.Intn(int(math.Max(screenWidth, screenHeight))-int(math.Min(screenWidth, screenHeight)))) / 4
+		visibleRange := float64(int(math.Min(ScreenWidth, ScreenHeight))+rand.Intn(int(math.Max(ScreenWidth, ScreenHeight))-int(math.Min(ScreenWidth, ScreenHeight)))) / 4
 		healthBar := HealthBar{
 			x:               x,
 			y:               y - h,
@@ -168,8 +168,8 @@ func spawnRubberDucks() {
 
 func spawnLootBoxes() {
 	for i := len(lootBoxes); i < maxLootBoxes; i++ {
-		x := camX + float64(rand.Intn(screenWidth*4))
-		y := camY + float64(rand.Intn(screenHeight*4))
+		x := camX + float64(rand.Intn(ScreenWidth*4))
+		y := camY + float64(rand.Intn(ScreenHeight*4))
 		w := float64(lootBoxImage.Bounds().Dx())
 		h := float64(lootBoxImage.Bounds().Dy())
 		hitPoints := lootBoxHealth + player.score/100
@@ -201,7 +201,7 @@ func spawnLootBoxes() {
 	}
 }
 
-func initialize() {
+func Initialize() {
 	enemyImageFiles := []string{"./resources/rust.png", "./resources/cpp.png", "./resources/java.png", "./resources/haskell.png", "./resources/javascript.png", "./resources/python.png", "./resources/csharp.png"}
 	for _, imgFile := range enemyImageFiles {
 		enemyImg, _, _ := ebitenutil.NewImageFromFile(imgFile)

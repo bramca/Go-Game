@@ -1,4 +1,4 @@
-module bramca/golang/game
+module gogame
 
 go 1.24.4
 

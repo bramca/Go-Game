@@ -1,8 +1,7 @@
-package main
+package gogame
 
 import (
 	"image/color"
-	"log"
 	"math"
 	"strconv"
 
@@ -21,8 +20,8 @@ const (
 )
 
 const (
-	screenWidth  = 1280
-	screenHeight = 860
+	ScreenWidth  = 1280
+	ScreenHeight = 860
 )
 
 var (
@@ -170,7 +169,7 @@ type Game struct {
 	mode Mode
 }
 
-func (g *Game) initialize() {
+func (g *Game) Initialize() {
 	lootRewards = []string{"Health", "Firerate", "Movement", "Damage", "Laser Speed", "Detect Boxes", "Invincible", "Insta Kill", "Vampire Mode"}
 	rubberDuckRewards = []string{"Shotgun", "Homing Lasers", "Piercing Lasers", "Double Lasers", "Exploding Lasers"}
 	dots = []*Dot{}
@@ -186,10 +185,10 @@ func (g *Game) initialize() {
 	pauseGeoMatrix = ebiten.GeoM{}
 
 	scoreGeoMatrix.Translate(float64(scoreFontSize), float64(scoreFontSize+10))
-	titleGeoMatrix.Translate(float64(screenWidth-len(titleTexts[0])*titleFontSize)/2, float64(4*titleFontSize))
-	titleExtraGeoMatrix.Translate(float64(screenWidth-len(titleTextsExtra[0])*fontSize)/2, float64(10*fontSize))
-	gameOverGeoMatrix.Translate(float64(screenWidth-len(gameOverTexts[0])*fontSize)/2, float64(8*fontSize))
-	pauseGeoMatrix.Translate(float64((screenWidth-len(pauseTexts[0])*fontSize)/2), float64(8*fontSize))
+	titleGeoMatrix.Translate(float64(ScreenWidth-len(titleTexts[0])*titleFontSize)/2, float64(4*titleFontSize))
+	titleExtraGeoMatrix.Translate(float64(ScreenWidth-len(titleTextsExtra[0])*fontSize)/2, float64(10*fontSize))
+	gameOverGeoMatrix.Translate(float64(ScreenWidth-len(gameOverTexts[0])*fontSize)/2, float64(8*fontSize))
+	pauseGeoMatrix.Translate(float64((ScreenWidth-len(pauseTexts[0])*fontSize)/2), float64(8*fontSize))
 
 	// set text draw options
 	titleDrawOptions = &text.DrawOptions{
@@ -260,10 +259,10 @@ func (g *Game) initialize() {
 	player.ammo = -1
 
 	// Calculate the position of the screen center based on the player's position
-	camX = player.x + player.w/2 - screenWidth/2
-	camY = player.y + player.h/2 - screenHeight/2
+	camX = player.x + player.w/2 - ScreenWidth/2
+	camY = player.y + player.h/2 - ScreenHeight/2
 
-	spawnDots(screenWidth, screenHeight)
+	spawnDots(ScreenWidth, ScreenHeight)
 
 	spawnLootBoxes()
 
@@ -280,7 +279,7 @@ func (g *Game) Update() error {
 		}
 	case ModeGameOver:
 		if ebiten.IsKeyPressed(ebiten.KeySpace) {
-			g.initialize()
+			g.Initialize()
 			g.mode = ModeGame
 		}
 	case ModePause:
@@ -327,8 +326,8 @@ func (g *Game) Update() error {
 		}
 
 		// Calculate the position of the screen center based on the player's position
-		camX = player.x + player.w/2 - screenWidth/2
-		camY = player.y + player.h/2 - screenHeight/2
+		camX = player.x + player.w/2 - ScreenWidth/2
+		camY = player.y + player.h/2 - ScreenHeight/2
 
 		if frameCount%maxFrameCount == 0 {
 			frameCount = 1
@@ -336,7 +335,7 @@ func (g *Game) Update() error {
 
 		// Generate a set of random dots if the dots slice is empty
 		if frameCount%dotSpawnRate == 0 {
-			spawnDots(screenWidth*2, screenHeight*2)
+			spawnDots(ScreenWidth*2, ScreenHeight*2)
 		}
 
 		if frameCount%enemySpawnRate == 0 {
@@ -489,8 +488,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		// Draw the enemies
 		for index := len(enemies) - 1; index >= 0; index-- {
-			if ((enemies[index].x-camX) < 0 || (enemies[index].x-camX) > screenWidth) &&
-				((enemies[index].y-camY) < 0 || (enemies[index].y-camY) > screenHeight) {
+			if ((enemies[index].x-camX) < 0 || (enemies[index].x-camX) > ScreenWidth) &&
+				((enemies[index].y-camY) < 0 || (enemies[index].y-camY) > ScreenHeight) {
 				continue
 			}
 			if enemies[index].points > 0 && !enemies[index].dead {
@@ -543,8 +542,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		// Draw the enemies
 		for index := len(enemies) - 1; index >= 0; index-- {
-			if ((enemies[index].x-camX) < 0 || (enemies[index].x-camX) > screenWidth) &&
-				((enemies[index].y-camY) < 0 || (enemies[index].y-camY) > screenHeight) {
+			if ((enemies[index].x-camX) < 0 || (enemies[index].x-camX) > ScreenWidth) &&
+				((enemies[index].y-camY) < 0 || (enemies[index].y-camY) > ScreenHeight) {
 				continue
 			}
 			if enemies[index].points > 0 && !enemies[index].dead {
@@ -644,25 +643,5 @@ func (g *Game) Draw(screen *ebiten.Image) {
 // Layout takes the outside size (e.g., the window size) and returns the (logical) screen size.
 // If you don't have to adjust the screen size with the outside size, just return a fixed size.
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return screenWidth, screenHeight
-}
-
-// TODO: ideas
-// 1. add more temporary rewards
-// 2. add more interesting enemies
-func main() {
-	game := &Game{}
-	// Sepcify the window size as you like. Here, a doulbed size is specified.
-	ebiten.SetWindowSize(screenWidth, screenHeight)
-	ebiten.SetWindowTitle("Go Forever")
-	ebiten.SetCursorMode(ebiten.CursorModeHidden)
-
-	initialize()
-
-	game.initialize()
-
-	// Call ebiten.RunGame to start your game loop.
-	if err := ebiten.RunGame(game); err != nil {
-		log.Fatal(err)
-	}
+	return ScreenWidth, ScreenHeight
 }

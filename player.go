@@ -1,4 +1,4 @@
-package main
+package gogame
 
 import (
 	"fmt"
@@ -113,7 +113,7 @@ func (p *Player) shoot() {
 				damage:            p.damage,
 				homing:            true,
 				homingTargetIndex: -1,
-				homingRange:       float64(int(math.Min(screenWidth, screenHeight))+rand.Intn(int(math.Max(screenWidth, screenHeight))-int(math.Min(screenWidth, screenHeight)))) / 4,
+				homingRange:       float64(int(math.Min(ScreenWidth, ScreenHeight))+rand.Intn(int(math.Max(ScreenWidth, ScreenHeight))-int(math.Min(ScreenWidth, ScreenHeight)))) / 4,
 			})
 		case "Shotgun":
 			for i := -math.Pi / 12; i < math.Pi/12; i += math.Pi / 36 {

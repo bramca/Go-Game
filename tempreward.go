@@ -1,4 +1,4 @@
-package main
+package gogame
 
 import (
 	"image/color"
@@ -46,8 +46,8 @@ func (t *TempReward) apply() {
 		}
 		player.w = float64(player.img.Bounds().Dx())
 		player.h = float64(player.img.Bounds().Dy())
-		camX = player.x + player.w/2 - screenWidth/2
-		camY = player.y + player.h/2 - screenHeight/2
+		camX = player.x + player.w/2 - ScreenWidth/2
+		camY = player.y + player.h/2 - ScreenHeight/2
 		player.instaKill = true
 	case "Vampire Mode":
 		t.properties["wasInstaKill"] = false
@@ -62,8 +62,8 @@ func (t *TempReward) apply() {
 		}
 		player.w = float64(player.img.Bounds().Dx())
 		player.h = float64(player.img.Bounds().Dy())
-		camX = player.x + player.w/2 - screenWidth/2
-		camY = player.y + player.h/2 - screenHeight/2
+		camX = player.x + player.w/2 - ScreenWidth/2
+		camY = player.y + player.h/2 - ScreenHeight/2
 		player.vampire = true
 	}
 }
