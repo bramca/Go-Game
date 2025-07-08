@@ -1,4 +1,4 @@
-module github.com/bramca/gogame
+module github.com/bramca/Go-Game
 
 go 1.24.4
 
