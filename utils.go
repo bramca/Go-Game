@@ -273,5 +273,4 @@ func activateTempReward(lootReward string, duration int) {
 		})
 		player.tempRewards[len(player.tempRewards)-1].apply()
 	}
-
 }

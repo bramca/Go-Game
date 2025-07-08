@@ -26,5 +26,4 @@ func (r *Recticle) draw(screen *ebiten.Image) {
 	x7, y7 := float32(mx)+rSize+1, float32(my)
 	x8, y8 := float32(mx+1), float32(my)
 	vector.StrokeLine(screen, x7, y7, x8, y8, 1, color.White, false)
-
 }

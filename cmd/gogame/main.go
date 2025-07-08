@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/bramca/gogame"
 	"log"
+
+	"github.com/bramca/gogame"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
