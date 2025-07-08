@@ -7,7 +7,8 @@ Using the [ebiten](https://github.com/hajimehoshi/ebiten) engine for the game ob
 
 # Install and Run
 `go install github.com/bramca/Go-Game/cmd/gogame@latest`
-`./gogame`
+<br>
+`gogame`
 
 # Controls
 `mouse right` hold it to shoot your gun.<br>
