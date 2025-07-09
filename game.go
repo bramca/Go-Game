@@ -1,6 +1,7 @@
 package gogame
 
 import (
+	"embed"
 	"image/color"
 	"math"
 	"strconv"
@@ -25,6 +26,9 @@ const (
 )
 
 var (
+	//go:embed resources/*
+	resources embed.FS
+
 	titleTexts      = []string{"GO FOREVER"}
 	titleTextsExtra = []string{"PRESS SPACE KEY"}
 	gameOverTexts   = []string{"GAME OVER!", "PRESS SPACE KEY"}

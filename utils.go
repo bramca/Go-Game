@@ -3,12 +3,13 @@ package gogame
 import (
 	randcrypto "crypto/rand"
 	"encoding/hex"
+	"fmt"
+	"image"
 	"image/color"
 	"math"
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"golang.org/x/image/font"
@@ -201,24 +202,62 @@ func spawnLootBoxes() {
 	}
 }
 
+func loadImage(imagePath string) (*ebiten.Image, error) {
+	file, err := resources.Open(imagePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open image file: %w", err)
+	}
+	defer file.Close()
+
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode image file: %w", err)
+	}
+
+	return ebiten.NewImageFromImage(img), nil
+}
+
 func Initialize() {
-	enemyImageFiles := []string{"./resources/rust.png", "./resources/cpp.png", "./resources/java.png", "./resources/haskell.png", "./resources/javascript.png", "./resources/python.png", "./resources/csharp.png"}
+	enemyImageFiles := []string{"resources/rust.png", "resources/cpp.png", "resources/java.png", "resources/haskell.png", "resources/javascript.png", "resources/python.png", "resources/csharp.png"}
 	for _, imgFile := range enemyImageFiles {
-		enemyImg, _, _ := ebitenutil.NewImageFromFile(imgFile)
+		enemyImg, err := loadImage(imgFile)
+		if err != nil {
+			panic(fmt.Sprintf("could not load image file: %e", err))
+		}
 		enemyImages = append(enemyImages, enemyImg)
 	}
 
-	lootBoxImage, _, _ = ebitenutil.NewImageFromFile("./resources/github.png")
+	var err error
+	lootBoxImage, err = loadImage("resources/github.png")
+	if err != nil {
+		panic(fmt.Sprintf("unable to load image: %e", err))
+	}
 
-	playerImage, _, _ = ebitenutil.NewImageFromFile("./resources/gopher.png")
+	playerImage, err = loadImage("resources/gopher.png")
+	if err != nil {
+		panic(fmt.Sprintf("unable to load image: %e", err))
+	}
 
-	playerSkullImage, _, _ = ebitenutil.NewImageFromFile("./resources/gopher_skull.png")
+	playerSkullImage, err = loadImage("resources/gopher_skull.png")
+	if err != nil {
+		panic(fmt.Sprintf("unable to load image: %e", err))
+	}
 
-	playerVampireImage, _, _ = ebitenutil.NewImageFromFile("./resources/gopher_vampire.png")
+	playerVampireImage, err = loadImage("resources/gopher_vampire.png")
+	if err != nil {
+		panic(fmt.Sprintf("unable to load image: %e", err))
+	}
 
-	playerVampireSkullImage, _, _ = ebitenutil.NewImageFromFile("./resources/gopher_vampire_skull.png")
+	playerVampireSkullImage, err = loadImage("resources/gopher_vampire_skull.png")
+	if err != nil {
+		panic(fmt.Sprintf("unable to load image: %e", err))
+	}
 
-	rubberDuckImage, _, _ = ebitenutil.NewImageFromFile("./resources/rubber_duck.png")
+
+	rubberDuckImage, err = loadImage("resources/rubber_duck.png")
+	if err != nil {
+		panic(fmt.Sprintf("unable to load image: %e", err))
+	}
 
 	// Generate a set of random dots if the dots slice is empty
 	dpi := 72.0

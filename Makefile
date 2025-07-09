@@ -17,3 +17,6 @@ tools: ## Install extra tools for development
 
 lint: ## Lint the code locally
 	golangci-lint run
+
+build: ## build the game
+	go build -o ./bin/game ./cmd/gogame/main.go
