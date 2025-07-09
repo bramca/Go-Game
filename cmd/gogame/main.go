@@ -18,7 +18,7 @@ func main() {
 	ebiten.SetWindowTitle("Go Forever")
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 
-	gogame.Initialize()
+	gogame.LoadImagesAndFonts()
 
 	game.Initialize()
 

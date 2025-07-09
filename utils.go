@@ -217,7 +217,7 @@ func loadImage(imagePath string) (*ebiten.Image, error) {
 	return ebiten.NewImageFromImage(img), nil
 }
 
-func Initialize() {
+func LoadImagesAndFonts() {
 	enemyImageFiles := []string{"resources/rust.png", "resources/cpp.png", "resources/java.png", "resources/haskell.png", "resources/javascript.png", "resources/python.png", "resources/csharp.png"}
 	for _, imgFile := range enemyImageFiles {
 		enemyImg, err := loadImage(imgFile)
