@@ -84,6 +84,7 @@ var (
 		damage:       pointsPerHit,
 		gun:          playerDefaultGun,
 		ammo:         -1,
+		drawOptions:  &ebiten.DrawImageOptions{},
 	}
 	playerImage             *ebiten.Image
 	playerSkullImage        *ebiten.Image
@@ -528,10 +529,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		// Draw recticle
 		recticle.draw(screen)
 	case ModeGame:
-		// Translate the screen to center it on the player
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(-float64(camX), -float64(camY))
-
 		// Draw the dots at their current position relative to the camera
 		for index := len(dots) - 1; index >= 0; index-- {
 			if !dots[index].eaten && dots[index].duration > 0 {

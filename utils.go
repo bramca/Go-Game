@@ -253,7 +253,6 @@ func LoadImagesAndFonts() {
 		panic(fmt.Sprintf("unable to load image: %e", err))
 	}
 
-
 	rubberDuckImage, err = loadImage("resources/rubber_duck.png")
 	if err != nil {
 		panic(fmt.Sprintf("unable to load image: %e", err))

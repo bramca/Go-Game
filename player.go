@@ -34,6 +34,7 @@ type Player struct {
 	damage       int
 	gun          string
 	ammo         int
+	drawOptions  *ebiten.DrawImageOptions
 }
 
 func (p *Player) shoot() {
@@ -214,11 +215,11 @@ func (p *Player) drawStats(screen *ebiten.Image) {
 
 func (p *Player) draw(screen *ebiten.Image, x float64, y float64) {
 	// Draw the player
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-float64(p.w/2), -float64(p.h/2))
-	op.GeoM.Rotate(p.angle)
-	op.GeoM.Translate(x, y)
-	screen.DrawImage(p.img, op)
+	p.drawOptions.GeoM.Reset()
+	p.drawOptions.GeoM.Translate(-float64(p.w/2), -float64(p.h/2))
+	p.drawOptions.GeoM.Rotate(p.angle)
+	p.drawOptions.GeoM.Translate(x, y)
+	screen.DrawImage(p.img, p.drawOptions)
 	p.healthBar.draw(screen)
 }
 
