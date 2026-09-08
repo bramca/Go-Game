@@ -8,6 +8,7 @@ import (
 	"image/color"
 	"math"
 	"math/rand"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/fonts"
@@ -207,7 +208,14 @@ func loadImage(imagePath string) (*ebiten.Image, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open image file: %w", err)
 	}
-	defer file.Close()
+
+	defer func() {
+		err := file.Close()
+		if err != nil {
+			fmt.Printf("failed to close image file")
+			os.Exit(1)
+		}
+	}()
 
 	img, _, err := image.Decode(file)
 	if err != nil {

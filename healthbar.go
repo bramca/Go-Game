@@ -45,8 +45,8 @@ func (h *HealthBar) draw(screen *ebiten.Image) {
 	x2, y2 := float32(h.x)+w1, float32(h.y)
 	w2 := float32(h.w * float64(h.maxPoints-h.points) / float64(h.maxPoints))
 	h2 := float32(h.h)
-	vector.DrawFilledRect(screen, x1, y1, w1, h1, h.healthBarColor, false)
-	vector.DrawFilledRect(screen, x2, y2, w2, h2, h.healthLostColor, false)
+	vector.FillRect(screen, x1, y1, w1, h1, h.healthBarColor, false)
+	vector.FillRect(screen, x2, y2, w2, h2, h.healthLostColor, false)
 	healthBarMsg := fmt.Sprintf("%d/%d", h.points, h.maxPoints)
 	text.Draw(screen, healthBarMsg, h.textFont, h.drawOptions)
 }
